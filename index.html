@@ -19,7 +19,6 @@
             --kt-text-l: #111111;
             --kt-text-r: #111111;
             
-            /* 지능형 다크모드 변수 추가 */
             --kt-text-bg: #111111; 
             --kt-date-bg: rgba(0,0,0,0.12);
             --kt-input-bg: #ffffff;
@@ -199,21 +198,28 @@
         .f-btn { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.25); backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; font-size: 32px; color: #fff; }
         .f-btn.red { background: #ef4444; border: none; }
 
-        /* 3. 카카오톡 */
+        /* 3. 카카오톡 - 리얼 비율 패치 */
         .katalk-header { display: flex; align-items: center; padding: 18px 20px; font-size: 20px; font-weight: 700; color: var(--kt-text-bg); gap: 14px; transition: color 0.3s; }
         .chat-area { flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 0 16px 90px 16px; overflow-y: hidden; }
-        .chat-date { align-self: center; background: var(--kt-date-bg); color: #fff; font-size: 13px; padding: 8px 20px; border-radius: 20px; margin-bottom: 12px; display: none; transition: 0.3s; }
-        .chat-row { display: flex; gap: 12px; align-items: flex-start; max-width: 80%; }
+        .chat-date { align-self: center; background: var(--kt-date-bg); color: #fff; font-size: 12px; padding: 6px 18px; border-radius: 20px; margin-bottom: 12px; display: none; transition: 0.3s; }
+        
+        .chat-row { display: flex; gap: 10px; align-items: flex-start; max-width: 85%; }
         .chat-row.right { align-self: flex-end; flex-direction: row-reverse; }
-        .profile-img { width: 48px; height: 48px; border-radius: 18px; flex-shrink: 0; background-color: #cbd5e1; background-size: cover; background-position: center; background-repeat: no-repeat; }
-        .chat-name { font-size: 14px; font-weight: 600; color: var(--kt-text-bg); opacity: 0.85; transition: color 0.3s; }
         
-        .bubble { padding: 12px 16px; border-radius: 20px; font-size: 16px; font-weight: 500; line-height: 1.45; word-break: break-all; }
-        .chat-row.left .bubble { background: var(--kt-bubble-l); color: var(--kt-text-l); border-top-left-radius: 6px; }
-        .chat-row.right .bubble { background: var(--kt-bubble-r); color: var(--kt-text-r); border-top-right-radius: 6px; }
+        /* 프사 크기 조절 (48px -> 42px) */
+        .profile-img { width: 42px; height: 42px; border-radius: 16px; flex-shrink: 0; background-color: #cbd5e1; background-size: cover; background-position: center; background-repeat: no-repeat; }
+        .chat-content { display: flex; flex-direction: column; gap: 0; }
         
-        .katalk-input { background: var(--kt-input-bg); padding: 16px 20px; display: flex; align-items: center; gap: 14px; position: absolute; bottom: 0; width: 100%; border-top: 1px solid rgba(0,0,0,0.05); transition: background 0.3s; }
-        .katalk-input div { flex: 1; height: 46px; background: var(--kt-input-box); border-radius: 23px; transition: background 0.3s; }
+        /* 이름과 말풍선 사이 여백 (margin-bottom: 6px) */
+        .chat-name { font-size: 12.5px; font-weight: 600; color: var(--kt-text-bg); opacity: 0.8; transition: color 0.3s; margin-bottom: 6px; padding-left: 2px; }
+        
+        /* 말풍선 다이어트 (크기 및 패딩 감소) */
+        .bubble { padding: 9px 14px; border-radius: 16px; font-size: 14.5px; font-weight: 500; line-height: 1.45; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .chat-row.left .bubble { background: var(--kt-bubble-l); color: var(--kt-text-l); border-top-left-radius: 4px; }
+        .chat-row.right .bubble { background: var(--kt-bubble-r); color: var(--kt-text-r); border-top-right-radius: 4px; }
+        
+        .katalk-input { background: var(--kt-input-bg); padding: 14px 20px; display: flex; align-items: center; gap: 14px; position: absolute; bottom: 0; width: 100%; border-top: 1px solid rgba(0,0,0,0.05); transition: background 0.3s; }
+        .katalk-input div { flex: 1; height: 42px; background: var(--kt-input-box); border-radius: 21px; transition: background 0.3s; }
         .katalk-input span { color: var(--kt-input-icon); transition: color 0.3s; }
 
         /* 4. 갤러리 */
@@ -486,7 +492,6 @@
             updateStatusBarColor();
         }
 
-        // ⭐ 11.5 지능형 카카오톡 테마 세팅
         function setKatalkTheme(bg, bubbleL, bubbleR, textL, textR, isDark, btn) {
             document.documentElement.style.setProperty('--kt-bg', bg);
             document.documentElement.style.setProperty('--kt-bubble-l', bubbleL);
