@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤍 Mobile Phone Editor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        :root {
+            --phone-bg: #ffffff;
+            --text-main: #111111;
+            --time-color: #ffffff; 
+            
+            --kt-bg: #b2c7d9;
+            --kt-bubble-l: #ffffff;
+            --kt-bubble-r: #fee500;
+            --kt-text-l: #111111;
+            --kt-text-r: #111111;
+            
+            --profile-img: url('');
+            --my-face-img: none;
+            --other-face-img: none; 
+            
+            --ui-bg: #ffffff;
+            --ui-surface: #f8fafc;
+            --ui-border: #e2e8f0;
+            --ui-accent: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
+        
+        body { 
+            background-color: #f1f5f9;
+            color: #1e293b; display: flex; justify-content: center; padding: 50px 20px; gap: 60px; min-height: 100vh; align-items: flex-start;
+        }
+
+        .controls { 
+            background: var(--ui-bg); 
+            padding: 40px; border-radius: 32px; width: 540px; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.05); 
+            max-height: 90vh; overflow-y: auto; 
+        }
+        .controls::-webkit-scrollbar { width: 8px; }
+        .controls::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        .controls h2 { margin-bottom: 35px; font-size: 28px; color: #0f172a; text-align: center; font-weight: 800; letter-spacing: -1px; }
+        
+        .sec-title { font-size: 16px; font-weight: 800; color: #64748b; margin: 35px 0 15px 0; padding-bottom: 12px; border-bottom: 2px solid var(--ui-surface); display: flex; justify-content: space-between; align-items: center;}
+
+        .color-palette { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 280px;}
+        .color-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .color-btn:hover { transform: scale(1.1); }
+        .color-btn.active { border-color: #0f172a; box-shadow: 0 0 0 3px #fff inset, 0 0 0 2px #0f172a; }
+
+        .control-block {
+            background: #ffffff;
+            border: 1px solid var(--ui-border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: all 0.3s ease;
+        }
+
+        .input-group { margin-bottom: 16px; position: relative; width: 100%; }
+        .input-group:last-child { margin-bottom: 0; }
+        
+        /* 라벨 높이 통일 및 정렬 수정 */
+        .input-group label { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #475569; min-height: 28px; }
+        
+        .input-group input, .input-group textarea, .input-group select { 
+            width: 100%; padding: 14px 18px; border-radius: 14px; 
+            border: 1px solid var(--ui-border); background: #f8fafc; 
+            font-size: 15px; transition: 0.2s; color: #0f172a; 
+        }
+        .input-group input[type="file"] { padding: 10px 14px; font-size: 13px; color: #64748b; cursor: pointer; }
+        
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus { 
+            border-color: #0f172a; background: #fff; outline: none; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); 
+        }
+        .input-group textarea { resize: none; height: 80px; }
+        
+        /* ROW 정렬: align-items: flex-end 로 입력칸들의 바닥 선을 무조건 일치시킴 */
+        .row { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-end; }
+        .row .input-group { flex: 1; margin-bottom: 0; }
+
+        .btn-action { 
+            display: inline-flex; align-items: center; justify-content: center; gap: 6px; 
+            padding: 8px 14px; background: #f1f5f9; border: none; border-radius: 10px; 
+            font-size: 13px; font-weight: 700; cursor: pointer; color: #475569; transition: 0.2s; 
+        }
+        .btn-action:hover { background: #e2e8f0; color: #0f172a; }
+        
+        .btn-delete { 
+            background: #fee2e2; color: #ef4444; font-size: 13px; font-weight: 800; 
+            padding: 6px 14px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s;
+            margin-left: auto;
+        }
+        .btn-delete:hover { background: #fecaca; }
+
+        .btn-add { 
+            display: flex; width: 100%; justify-content: center; padding: 18px; 
+            border: 2px dashed #cbd5e1; background: #f8fafc; border-radius: 16px; 
+            color: #64748b; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 10px; transition: 0.2s; 
+        }
+        .btn-add:hover { border-color: #0f172a; color: #0f172a; background: #ffffff; }
+
+        .btn-capture { 
+            display: block; width: 100%; padding: 22px; margin-top: 40px; 
+            background: #0f172a; color: #fff; border: none; border-radius: 20px; 
+            font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.3s;
+        }
+        .btn-capture:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+
+        .tabs { 
+            display: flex; gap: 6px; margin-bottom: 35px; background: #f1f5f9; 
+            padding: 6px; border-radius: 20px; 
+        }
+        .tab-btn { 
+            flex: 1; padding: 14px; border: none; background: transparent; border-radius: 16px; 
+            cursor: pointer; font-weight: 800; color: #64748b; transition: 0.3s; font-size: 14px; 
+        }
+        .tab-btn.active { background: #fff; color: #0f172a; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- 프리뷰 폰 --- */
+        .phone { 
+            width: 400px; height: 820px; 
+            background-color: var(--phone-bg);
+            border-radius: 55px; 
+            border: 14px solid #111; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15); 
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+            transition: background-color 0.4s ease;
+            flex-shrink: 0;
+            box-sizing: border-box; 
+        }
+
+        .dynamic-island { 
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%); 
+            width: 125px; height: 36px; background: #000; border-radius: 24px; z-index: 50; 
+        }
+
+        .phone-bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; z-index: 0; }
+        .katalk-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--kt-bg); z-index: 0; display: none; }
+        .gallery-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #fff; z-index: 0; display: none; }
+        .face-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #333; background-image: var(--other-face-img); background-size: cover; background-position: center; z-index: 0; display: none; }
+
+        .status-bar { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 20px 24px; font-size: 16px; font-weight: 800; color: var(--text-main); }
+        .status-icons { display: flex; gap: 7px; align-items: center; font-size: 15px; }
+
+        .screen-mode { display: none; position: relative; z-index: 1; flex: 1; flex-direction: column; }
+        .screen-mode.active { display: flex; }
+
+        /* 1. 잠금화면 */
+        #mode-lock { padding: 0 20px; }
+        .lock-date-time { text-align: center; margin-top: 55px; margin-bottom: 35px; color: var(--time-color); text-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: color 0.3s; }
+        .lock-date-time h1 { font-size: 82px; font-weight: 200; letter-spacing: -3px; line-height: 1; min-height: 82px; }
+        .lock-date-time p { font-size: 18px; font-weight: 500; min-height: 24px; margin-top: 8px;}
+
+        .widget-area { display: flex; flex-direction: column; gap: 16px; padding: 0 5px; }
+        .widget { 
+            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); 
+            border-radius: 22px; padding: 18px 22px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
+        }
+        .w-header { font-size: 13px; font-weight: 800; color: #64748b; margin-bottom: 10px; display: flex; justify-content: space-between; }
+        .w-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
+        .w-desc { font-size: 14px; color: #334155; line-height: 1.5; word-break: break-all; }
+
+        /* 2. 영상통화 */
+        #mode-face { align-items: center; }
+        .face-top { text-align: center; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-top: 60px; }
+        .face-top h2 { font-size: 40px; font-weight: 600; min-height: 40px; }
+        .face-top p { font-size: 18px; opacity: 0.9; margin-top: 8px; }
+        .face-pip { 
+            width: 115px; height: 170px; background-color: rgba(255,255,255,0.2); 
+            background-image: var(--my-face-img); background-size: cover; background-position: center;
+            border-radius: 20px; position: absolute; top: 160px; right: 24px; border: 1.5px solid rgba(255,255,255,0.6); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        .face-bottom { position: absolute; bottom: 60px; width: 100%; display: flex; justify-content: center; gap: 28px; }
+        .f-btn { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.25); backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; font-size: 32px; color: #fff; }
+        .f-btn.red { background: #ef4444; border: none; }
+
+        /* 3. 카카오톡 */
+        .katalk-header { display: flex; align-items: center; padding: 18px 20px; font-size: 20px; font-weight: 700; color: var(--kt-text-l); gap: 14px; }
+        .chat-area { flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 0 16px 90px 16px; overflow-y: hidden; }
+        .chat-date { align-self: center; background: rgba(0,0,0,0.12); color: #fff; font-size: 13px; padding: 8px 20px; border-radius: 20px; margin-bottom: 12px; display: none; }
+        .chat-row { display: flex; gap: 12px; align-items: flex-start; max-width: 80%; }
+        .chat-row.right { align-self: flex-end; flex-direction: row-reverse; }
+        .profile-img { width: 48px; height: 48px; border-radius: 18px; background-image: var(--profile-img); background-size: cover; background-position: center; flex-shrink: 0; background-color: #cbd5e1; }
+        .bubble { padding: 12px 16px; border-radius: 20px; font-size: 16px; font-weight: 500; line-height: 1.45; word-break: break-all; }
+        .chat-row.left .bubble { background: var(--kt-bubble-l); color: var(--kt-text-l); border-top-left-radius: 6px; }
+        .chat-row.right .bubble { background: var(--kt-bubble-r); color: var(--kt-text-r); border-top-right-radius: 6px; }
+        .katalk-input { background: #fff; padding: 16px 20px; display: flex; align-items: center; gap: 14px; position: absolute; bottom: 0; width: 100%; border-top: 1px solid rgba(0,0,0,0.05); }
+        .katalk-input div { flex: 1; height: 46px; background: #f1f5f9; border-radius: 23px; }
+
+        /* 4. 갤러리 */
+        #mode-gallery { padding: 0; }
+        .gallery-header { padding: 22px 24px 15px 24px; font-size: 26px; font-weight: 800; color: #000; border-bottom: 1px solid #f2f2f2; letter-spacing: -0.5px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; overflow-y: hidden; }
+        .gallery-item { aspect-ratio: 1; background-color: #f1f5f9; background-size: cover; background-position: center; }
+
+        .dynamic-block { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <h2>🤍 Mobile Phone Editor</h2>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('tab-lock', 'mode-lock')">위젯/잠금</button>
+            <button class="tab-btn" onclick="switchTab('tab-face', 'mode-face')">영상통화</button>
+            <button class="tab-btn" onclick="switchTab('tab-katalk', 'mode-katalk')">카카오톡</button>
+            <button class="tab-btn" onclick="switchTab('tab-gallery', 'mode-gallery')">갤러리</button>
+        </div>
+
+        <div id="tab-lock" class="tab-content active">
+            <div class="sec-title">기본 설정
+                <div class="color-palette">
+                    <div class="color-btn active" style="background:#fff;" onclick="setPhoneTheme('#fff', '#111', this)"></div>
+                    <div class="color-btn" style="background:#1c1c1e;" onclick="setPhoneTheme('#1c1c1e', '#fff', this)"></div>
+                    <div class="color-btn" style="background:#f4f0ec;" onclick="setPhoneTheme('#f4f0ec', '#111', this)"></div>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>배경 이미지 업로드</label>
+                <input type="file" id="in-bg" accept="image/*">
+            </div>
+
+            <div class="sec-title">상단바 설정 
+                <button class="btn-action" onclick="generateStatusBar()">🎲 랜덤</button>
+            </div>
+            <div class="row">
+                <div class="input-group"><label>시간</label><input type="text" id="in-time" placeholder="예: 1234" oninput="formatTime(this, 'out-time')" maxlength="4"></div>
+                <div class="input-group"><label>배터리</label><input type="text" id="in-battery" placeholder="예: 80" oninput="formatBattery(this, 'out-battery')" maxlength="3"></div>
+                <div class="input-group">
+                    <label>네트워크</label>
+                    <select id="in-network" onchange="updateText('out-network', this.value)">
+                        <option value="📶">LTE 📶</option>
+                        <option value="5G">5G</option>
+                        <option value="🛜">Wi-Fi 🛜</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sec-title">메인 시간/날짜 설정
+                <div class="color-palette">
+                    <div class="color-btn active" style="background:#fff;" onclick="setTimeColor('#ffffff', this)"></div>
+                    <div class="color-btn" style="background:#111;" onclick="setTimeColor('#111111', this)"></div>
+                    <button class="btn-action" style="margin-left: 10px;" onclick="generateMainDateTime()">🎲 랜덤</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="input-group"><label>시간</label><input type="text" id="in-main-time" placeholder="예: 03:45" oninput="updateText('out-main-time', this.value)"></div>
+                <div class="input-group"><label>날짜</label><input type="text" id="in-main-date" placeholder="예: 9월 26일 화요일" oninput="updateText('out-main-date', this.value)"></div>
+            </div>
+            
+            <div class="sec-title" style="margin-top: 40px;">위젯 관리</div>
+            <div id="widget-controls"></div>
+            <button class="btn-add" onclick="addWidget()">+ 위젯 추가</button>
+        </div>
+
+        <div id="tab-face" class="tab-content">
+            <div class="sec-title" style="margin-top:0;">영상통화 화면 설정</div>
+            <div class="control-block">
+                <div class="input-group">
+                    <label>상대방 사진 (전체 배경)</label>
+                    <input type="file" id="in-other-pic" accept="image/*">
+                </div>
+                <div class="input-group">
+                    <label>상대방 이름</label>
+                    <input type="text" placeholder="이름 입력" oninput="updateText('face-name', this.value)">
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>통화 상태 <button class="btn-action" onclick="generateCallTime()">🎲 랜덤</button></label>
+                    <input type="text" id="in-face-status" placeholder="예: 통화 중 - 02:45" oninput="updateText('face-status', this.value)">
+                </div>
+            </div>
+            
+            <div class="control-block">
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>내 사진 (우측 상단 화면)</label>
+                    <input type="file" id="in-my-pic" accept="image/*">
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-katalk" class="tab-content">
+            <div class="sec-title" style="margin-top:0;">카톡 테마 (7종)</div>
+            <div class="color-palette" style="justify-content: flex-start; margin-bottom: 20px;">
+                <div class="color-btn active" style="background:#b2c7d9;" onclick="setKatalkTheme('#b2c7d9', '#fff', '#fee500', '#111', '#111', this)"></div>
+                <div class="color-btn" style="background:#202124;" onclick="setKatalkTheme('#202124', '#303134', '#fdd835', '#fff', '#111', this)"></div>
+                <div class="color-btn" style="background:#ffdce0;" onclick="setKatalkTheme('#ffdce0', '#fff', '#ffb6c1', '#111', '#111', this)"></div>
+                <div class="color-btn" style="background:#a7d7c5;" onclick="setKatalkTheme('#a7d7c5', '#fff', '#68d3a6', '#111', '#111', this)"></div>
+                <div class="color-btn" style="background:#c5bced;" onclick="setKatalkTheme('#c5bced', '#fff', '#9d8df2', '#111', '#fff', this)"></div>
+                <div class="color-btn" style="background:#fceea7;" onclick="setKatalkTheme('#fceea7', '#fff', '#ffdc3b', '#111', '#111', this)"></div>
+                <div class="color-btn" style="background:#2c3e50;" onclick="setKatalkTheme('#2c3e50', '#ecf0f1', '#f1c40f', '#111', '#111', this)"></div>
+            </div>
+
+            <div class="control-block">
+                <div class="input-group">
+                    <label>상대방 프로필 사진</label>
+                    <input type="file" id="in-profile" accept="image/*">
+                </div>
+                <div class="row" style="margin-bottom:0;">
+                    <div class="input-group"><label>이름</label><input type="text" placeholder="이름 입력" oninput="updateText('katalk-name', this.value); updateAllChatNames(this.value);"></div>
+                    <div class="input-group"><label>채팅 날짜 <button class="btn-action" style="padding:4px 8px; font-size:11px;" onclick="generateKatalkDate()">🎲</button></label>
+                        <input type="text" id="in-katalk-date" placeholder="날짜 입력" oninput="updateDisplay('katalk-date', this.value)">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sec-title">말풍선 추가</div>
+            <div id="chat-controls"></div>
+            <div class="row">
+                <button class="btn-add" onclick="addChat('left')">+ 상대방 말 추가</button>
+                <button class="btn-add" onclick="addChat('right')">+ 내 말 추가</button>
+            </div>
+        </div>
+
+        <div id="tab-gallery" class="tab-content">
+            <div class="sec-title" style="margin-top:0;">갤러리 사진 추가</div>
+            <div id="gallery-controls"></div>
+            <button class="btn-add" onclick="addGalleryItem()">+ 사진 추가</button>
+        </div>
+
+        <button class="btn-capture" id="btn-capture-action" onclick="captureUltraHQ()">📸 이미지 저장</button>
+    </div>
+
+    <div class="phone" id="capture-area">
+        <div class="dynamic-island"></div>
+        <div class="phone-bg-img" id="out-bg"></div>
+        <div class="face-bg" id="out-face-bg"></div>
+        <div class="katalk-bg" id="katalk-bg"></div>
+        <div class="gallery-bg" id="gallery-bg"></div>
+        
+        <div class="status-bar" id="status-bar">
+            <span id="out-time"></span>
+            <div class="status-icons"><span id="out-network">📶</span> <span id="out-battery"></span> 🔋</div>
+        </div>
+
+        <div id="mode-lock" class="screen-mode active">
+            <div class="lock-date-time"><h1 id="out-main-time"></h1><p id="out-main-date"></p></div>
+            <div class="widget-area" id="widget-display"></div>
+        </div>
+
+        <div id="mode-face" class="screen-mode">
+            <div class="face-top"><h2 id="face-name"></h2><p id="face-status"></p></div>
+            <div class="face-pip" id="out-my-pic"></div>
+            <div class="face-bottom"><div class="f-btn">🎙️</div><div class="f-btn red">📞</div><div class="f-btn">📹</div></div>
+        </div>
+
+        <div id="mode-katalk" class="screen-mode">
+            <div class="katalk-header"><span>&lt;</span> <span id="katalk-name"></span></div>
+            <div class="chat-area">
+                <div class="chat-date" id="katalk-date"></div>
+                <div id="chat-display" style="display:flex;flex-direction:column;gap:16px;"></div>
+            </div>
+            <div class="katalk-input"><span>+</span><div></div><span>#</span></div>
+        </div>
+
+        <div id="mode-gallery" class="screen-mode">
+            <div class="gallery-header">Gallery</div> 
+            <div class="gallery-grid" id="out-gallery-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateText(id, value) { document.getElementById(id).innerText = value; }
+        function updateDisplay(id, value) {
+            const el = document.getElementById(id);
+            el.innerText = value;
+            el.style.display = value ? 'inline-block' : 'none';
+        }
+
+        function formatTime(input, targetId) {
+            let val = input.value.replace(/\D/g, ''); 
+            if (val.length >= 3) val = val.substring(0, 2) + ':' + val.substring(2, 4);
+            input.value = val;
+            updateText(targetId, val);
+        }
+
+        function formatBattery(input, targetId) {
+            let val = input.value.replace(/\D/g, '');
+            input.value = val;
+            updateText(targetId, val ? val + '%' : '');
+        }
+
+        function generateStatusBar() {
+            const h = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const m = String(Math.floor(Math.random() * 60)).padStart(2, '0');
+            const bat = String(Math.floor(Math.random() * 100) + 1);
+            const timeInput = document.getElementById('in-time');
+            timeInput.value = h + m;
+            formatTime(timeInput, 'out-time');
+            const batInput = document.getElementById('in-battery');
+            batInput.value = bat;
+            formatBattery(batInput, 'out-battery');
+        }
+
+        function generateMainDateTime() {
+            const h = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+            const m = String(Math.floor(Math.random() * 60)).padStart(2, '0');
+            const dateStr = `${Math.floor(Math.random() * 12) + 1}월 ${Math.floor(Math.random() * 28) + 1}일 ${['일', '월', '화', '수', '목', '금', '토'][Math.floor(Math.random() * 7)]}요일`;
+            document.getElementById('in-main-time').value = h + ':' + m;
+            document.getElementById('in-main-date').value = dateStr;
+            updateText('out-main-time', h + ':' + m);
+            updateText('out-main-date', dateStr);
+        }
+
+        function generateCallTime() {
+            const result = `통화 중 - ${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
+            document.getElementById('in-face-status').value = result;
+            updateText('face-status', result);
+        }
+
+        function generateKatalkDate() {
+            const result = `2024년 ${Math.floor(Math.random() * 12) + 1}월 ${Math.floor(Math.random() * 28) + 1}일 ${['일', '월', '화', '수', '목', '금', '토'][Math.floor(Math.random() * 7)]}요일`;
+            document.getElementById('in-katalk-date').value = result;
+            updateDisplay('katalk-date', result);
+        }
+
+        function setTimeColor(color, btn) {
+            document.documentElement.style.setProperty('--time-color', color);
+            btn.parentElement.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        let currentPhoneTextColor = '#111';
+        function setPhoneTheme(bg, text, btn) {
+            document.documentElement.style.setProperty('--phone-bg', bg);
+            document.documentElement.style.setProperty('--text-main', text);
+            currentPhoneTextColor = text;
+            btn.parentElement.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateStatusBarColor();
+        }
+
+        function setKatalkTheme(bg, bubbleL, bubbleR, textL, textR, btn) {
+            document.documentElement.style.setProperty('--kt-bg', bg);
+            document.documentElement.style.setProperty('--kt-bubble-l', bubbleL);
+            document.documentElement.style.setProperty('--kt-bubble-r', bubbleR);
+            document.documentElement.style.setProperty('--kt-text-l', textL);
+            document.documentElement.style.setProperty('--kt-text-r', textR);
+            btn.parentElement.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            updateStatusBarColor();
+        }
+
+        function switchTab(tabId, modeId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.screen-mode').forEach(m => m.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById(modeId).classList.add('active');
+
+            document.getElementById('katalk-bg').style.display = (modeId === 'mode-katalk') ? 'block' : 'none';
+            document.getElementById('gallery-bg').style.display = (modeId === 'mode-gallery') ? 'block' : 'none';
+            document.getElementById('out-face-bg').style.display = (modeId === 'mode-face') ? 'block' : 'none';
+            
+            updateStatusBarColor();
+        }
+
+        function updateStatusBarColor() {
+            const modeKatalk = document.getElementById('mode-katalk').classList.contains('active');
+            const modeGallery = document.getElementById('mode-gallery').classList.contains('active');
+            const modeFace = document.getElementById('mode-face').classList.contains('active');
+            const hasBgImage = document.getElementById('out-bg').style.backgroundImage !== '';
+
+            if (modeGallery) {
+                document.getElementById('status-bar').style.color = '#000';
+            } else if (modeKatalk) {
+                document.getElementById('status-bar').style.color = getComputedStyle(document.documentElement).getPropertyValue('--kt-text-l');
+            } else if (modeFace) {
+                document.getElementById('status-bar').style.color = '#fff';
+            } else {
+                document.getElementById('status-bar').style.color = (hasBgImage && hasBgImage !== 'none') ? '#fff' : currentPhoneTextColor;
+            }
+        }
+
+        document.getElementById('in-bg').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.getElementById('out-bg').style.backgroundImage = `url(${event.target.result})`;
+                    updateStatusBarColor();
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        document.getElementById('in-other-pic').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    document.documentElement.style.setProperty('--other-face-img', `url(${event.target.result})`);
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('in-profile').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => document.documentElement.style.setProperty('--profile-img', `url(${event.target.result})`);
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('in-my-pic').addEventListener('change', function(e) {
+            if (e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (event) => document.documentElement.style.setProperty('--my-face-img', `url(${event.target.result})`);
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        function addGalleryItem() {
+            const id = Date.now();
+            const ctrl = document.createElement('div');
+            ctrl.className = 'control-block dynamic-block';
+            ctrl.id = `ctrl-g-${id}`;
+            ctrl.innerHTML = `
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>사진 업로드 <button class="btn-delete" onclick="removeElement('ctrl-g-${id}', 'view-g-${id}')">삭제</button></label>
+                    <input type="file" accept="image/*" onchange="previewGalleryImage(this, '${id}')">
+                </div>
+            `;
+            document.getElementById('gallery-controls').appendChild(ctrl);
+
+            const view = document.createElement('div');
+            view.className = 'gallery-item';
+            view.id = `view-g-${id}`;
+            view.style.display = 'none'; 
+            document.getElementById('out-gallery-grid').appendChild(view);
+        }
+
+        function previewGalleryImage(input, id) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const view = document.getElementById(`view-g-${id}`);
+                    view.style.backgroundImage = `url(${event.target.result})`;
+                    view.style.display = 'block'; 
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        const widgetTypes = {
+            'msg': { icon: '💬', name: '메시지' },
+            'fortune': { icon: '⭐', name: '오늘의 운세' },
+            'warning': { icon: '🚨', name: '시스템 경고' },
+            'alarm': { icon: '⏰', name: '알람' },
+            'music': { icon: '🎵', name: '음악 플레이어' },
+            'hot': { icon: '🔥', name: '실시간 인기글' }
+        };
+
+        function updateWidgetType(id, type) {
+            document.getElementById(`view-w-icon-${id}`).innerText = widgetTypes[type].icon;
+            document.getElementById(`view-w-name-${id}`).innerText = widgetTypes[type].name;
+        }
+
+        function addWidget() {
+            const id = Date.now();
+            const ctrl = document.createElement('div');
+            ctrl.className = 'control-block dynamic-block';
+            ctrl.id = `ctrl-w-${id}`;
+            ctrl.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <span style="font-weight:800; color:#0f172a; font-size:15px;">위젯 설정</span>
+                    <button class="btn-delete" onclick="removeElement('ctrl-w-${id}', 'view-w-${id}')">삭제</button>
+                </div>
+                <div class="row">
+                    <div class="input-group">
+                        <select onchange="updateWidgetType('${id}', this.value)">
+                            <option value="msg">💬 메시지</option>
+                            <option value="fortune">⭐ 오늘의 운세</option>
+                            <option value="warning">🚨 시스템 경고</option>
+                            <option value="alarm">⏰ 알람</option>
+                            <option value="music">🎵 음악 플레이어</option>
+                            <option value="hot">🔥 실시간 인기글</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" placeholder="제목 (예: [시스템])" oninput="updateText('view-t-${id}', this.value); toggleW('${id}')">
+                    </div>
+                </div>
+                <div class="input-group" style="margin-bottom:0;">
+                    <textarea placeholder="내용을 입력하세요..." oninput="updateText('view-d-${id}', this.value); toggleW('${id}')"></textarea>
+                </div>
+            `;
+            document.getElementById('widget-controls').appendChild(ctrl);
+
+            const view = document.createElement('div');
+            view.className = 'widget'; view.id = `view-w-${id}`; view.style.display = 'none';
+            view.innerHTML = `
+                <div class="w-header">
+                    <span><span id="view-w-icon-${id}">💬</span> <span id="view-w-name-${id}">메시지</span></span>
+                    <span>지금</span>
+                </div>
+                <div class="w-title" id="view-t-${id}"></div>
+                <div class="w-desc" id="view-d-${id}"></div>
+            `;
+            document.getElementById('widget-display').appendChild(view);
+        }
+        function toggleW(id) { document.getElementById(`view-w-${id}`).style.display = 'block'; }
+
+        function addChat(side) {
+            const id = Date.now();
+            const ctrl = document.createElement('div');
+            ctrl.className = 'control-block dynamic-block';
+            ctrl.id = `ctrl-c-${id}`;
+            ctrl.innerHTML = `
+                <div class="input-group" style="margin-bottom:0;">
+                    <label>${side==='left'?'상대방':'나'} 말풍선 <button class="btn-delete" onclick="removeElement('ctrl-c-${id}', 'view-c-${id}')">삭제</button></label>
+                    <textarea placeholder="대화 내용 입력" oninput="updateText('v-b-${id}', this.value); toggleC('${id}')"></textarea>
+                </div>
+            `;
+            document.getElementById('chat-controls').appendChild(ctrl);
+
+            const view = document.createElement('div');
+            view.className = `chat-row ${side}`; view.id = `view-c-${id}`; view.style.display = 'none';
+            view.innerHTML = side==='left' ? `<div class="profile-img"></div><div class="chat-content"><div class="chat-name k-dyn-name"></div><div class="bubble" id="v-b-${id}"></div></div>` : `<div class="chat-content"><div class="bubble" id="v-b-${id}"></div></div>`;
+            document.getElementById('chat-display').appendChild(view);
+            
+            const currentName = document.getElementById('katalk-name').innerText;
+            updateAllChatNames(currentName);
+        }
+        function toggleC(id) { document.getElementById(`view-c-${id}`).style.display = 'flex'; }
+        function updateAllChatNames(n) { document.querySelectorAll('.k-dyn-name').forEach(el => el.innerText = n); }
+        
+        function removeElement(c, v) { 
+            const ctrl = document.getElementById(c);
+            const view = document.getElementById(v);
+            if(ctrl) ctrl.remove(); 
+            if(view) view.remove(); 
+        }
+
+        async function captureUltraHQ() {
+            const btn = document.getElementById('btn-capture-action');
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ 렌더링 중...";
+
+            try {
+                await document.fonts.ready;
+                await new Promise(r => setTimeout(r, 300));
+
+                const target = document.getElementById('capture-area');
+                const clone = target.cloneNode(true);
+
+                const wrapper = document.createElement('div');
+                wrapper.style.padding = "30px"; 
+                wrapper.style.background = "transparent";
+                wrapper.style.position = "fixed";
+                wrapper.style.top = "-9999px"; 
+                wrapper.style.left = "0";
+                wrapper.style.zIndex = "9999";
+                
+                clone.style.margin = "0";
+                clone.querySelectorAll("*").forEach(el => {
+                    el.style.transformStyle = "flat";
+                    el.style.animation = "none";
+                });
+
+                const origElements = target.querySelectorAll('*');
+                const cloneElements = clone.querySelectorAll('*');
+                for (let i = 0; i < origElements.length; i++) {
+                    const orig = origElements[i];
+                    const cln = cloneElements[i];
+                    if (orig.style.backgroundImage && orig.style.backgroundImage !== 'none') {
+                        cln.style.backgroundImage = orig.style.backgroundImage;
+                        cln.style.backgroundPosition = orig.style.backgroundPosition;
+                        cln.style.backgroundSize = orig.style.backgroundSize;
+                        cln.style.backgroundRepeat = orig.style.backgroundRepeat;
+                    }
+                }
+
+                wrapper.appendChild(clone);
+                document.body.appendChild(wrapper);
+
+                const images = [...clone.querySelectorAll('img')];
+                await Promise.all(images.map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise(res => { img.onload = res; img.onerror = res; });
+                }));
+
+                const canvas = await html2canvas(wrapper, {
+                    scale: 5, 
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: null, 
+                    logging: false
+                });
+
+                const link = document.createElement("a");
+                link.download = "Mobile_Phone_Editor_HQ.png";
+                link.href = canvas.toDataURL("image/png", 1.0);
+                link.click();
+
+                document.body.removeChild(wrapper);
+
+            } catch (err) {
+                console.error(err);
+                alert("캡처에 실패했습니다.");
+            } finally {
+                btn.innerText = originalText;
+            }
+        }
+
+        window.onload = function() { 
+            generateStatusBar(); 
+            generateMainDateTime(); 
+            generateCallTime(); 
+            generateKatalkDate(); 
+            addWidget(); 
+            addGalleryItem(); 
+        };
+    </script>
+</body>
+</html>
