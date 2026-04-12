@@ -19,6 +19,17 @@
             --kt-text-l: #111111;
             --kt-text-r: #111111;
             
+            /* 지능형 다크모드 변수 추가 */
+            --kt-text-bg: #111111; 
+            --kt-date-bg: rgba(0,0,0,0.12);
+            --kt-input-bg: #ffffff;
+            --kt-input-box: #f1f5f9;
+            --kt-input-icon: #94a3b8;
+            
+            --profile-img: url('');
+            --my-face-img: none;
+            --other-face-img: none; 
+            
             --ui-bg: #ffffff;
             --ui-surface: #f8fafc;
             --ui-border: #e2e8f0;
@@ -148,11 +159,11 @@
         }
 
         .phone-bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 0; }
-        .katalk-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--kt-bg); z-index: 0; display: none; }
+        .katalk-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--kt-bg); z-index: 0; display: none; transition: background-color 0.3s; }
         .gallery-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #fff; z-index: 0; display: none; }
         .face-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #333; background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 0; display: none; }
 
-        .status-bar { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 20px 24px; font-size: 16px; font-weight: 800; color: var(--text-main); }
+        .status-bar { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 20px 24px; font-size: 16px; font-weight: 800; color: var(--text-main); transition: color 0.3s; }
         .status-icons { display: flex; gap: 7px; align-items: center; font-size: 15px; }
 
         .screen-mode { display: none; position: relative; z-index: 1; flex: 1; flex-direction: column; }
@@ -189,17 +200,21 @@
         .f-btn.red { background: #ef4444; border: none; }
 
         /* 3. 카카오톡 */
-        .katalk-header { display: flex; align-items: center; padding: 18px 20px; font-size: 20px; font-weight: 700; color: var(--kt-text-l); gap: 14px; }
+        .katalk-header { display: flex; align-items: center; padding: 18px 20px; font-size: 20px; font-weight: 700; color: var(--kt-text-bg); gap: 14px; transition: color 0.3s; }
         .chat-area { flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 0 16px 90px 16px; overflow-y: hidden; }
-        .chat-date { align-self: center; background: rgba(0,0,0,0.12); color: #fff; font-size: 13px; padding: 8px 20px; border-radius: 20px; margin-bottom: 12px; display: none; }
+        .chat-date { align-self: center; background: var(--kt-date-bg); color: #fff; font-size: 13px; padding: 8px 20px; border-radius: 20px; margin-bottom: 12px; display: none; transition: 0.3s; }
         .chat-row { display: flex; gap: 12px; align-items: flex-start; max-width: 80%; }
         .chat-row.right { align-self: flex-end; flex-direction: row-reverse; }
         .profile-img { width: 48px; height: 48px; border-radius: 18px; flex-shrink: 0; background-color: #cbd5e1; background-size: cover; background-position: center; background-repeat: no-repeat; }
+        .chat-name { font-size: 14px; font-weight: 600; color: var(--kt-text-bg); opacity: 0.85; transition: color 0.3s; }
+        
         .bubble { padding: 12px 16px; border-radius: 20px; font-size: 16px; font-weight: 500; line-height: 1.45; word-break: break-all; }
         .chat-row.left .bubble { background: var(--kt-bubble-l); color: var(--kt-text-l); border-top-left-radius: 6px; }
         .chat-row.right .bubble { background: var(--kt-bubble-r); color: var(--kt-text-r); border-top-right-radius: 6px; }
-        .katalk-input { background: #fff; padding: 16px 20px; display: flex; align-items: center; gap: 14px; position: absolute; bottom: 0; width: 100%; border-top: 1px solid rgba(0,0,0,0.05); }
-        .katalk-input div { flex: 1; height: 46px; background: #f1f5f9; border-radius: 23px; }
+        
+        .katalk-input { background: var(--kt-input-bg); padding: 16px 20px; display: flex; align-items: center; gap: 14px; position: absolute; bottom: 0; width: 100%; border-top: 1px solid rgba(0,0,0,0.05); transition: background 0.3s; }
+        .katalk-input div { flex: 1; height: 46px; background: var(--kt-input-box); border-radius: 23px; transition: background 0.3s; }
+        .katalk-input span { color: var(--kt-input-icon); transition: color 0.3s; }
 
         /* 4. 갤러리 */
         #mode-gallery { padding: 0; }
@@ -312,13 +327,13 @@
         <div id="tab-katalk" class="tab-content">
             <div class="sec-title" style="margin-top:0;">카톡 테마 (7종)</div>
             <div class="color-palette" style="justify-content: flex-start; margin-bottom: 20px;">
-                <div class="color-btn active" style="background:#b2c7d9;" onclick="setKatalkTheme('#b2c7d9', '#fff', '#fee500', '#111', '#111', this)"></div>
-                <div class="color-btn" style="background:#202124;" onclick="setKatalkTheme('#202124', '#303134', '#fdd835', '#fff', '#111', this)"></div>
-                <div class="color-btn" style="background:#ffdce0;" onclick="setKatalkTheme('#ffdce0', '#fff', '#ffb6c1', '#111', '#111', this)"></div>
-                <div class="color-btn" style="background:#a7d7c5;" onclick="setKatalkTheme('#a7d7c5', '#fff', '#68d3a6', '#111', '#111', this)"></div>
-                <div class="color-btn" style="background:#c5bced;" onclick="setKatalkTheme('#c5bced', '#fff', '#9d8df2', '#111', '#fff', this)"></div>
-                <div class="color-btn" style="background:#fceea7;" onclick="setKatalkTheme('#fceea7', '#fff', '#ffdc3b', '#111', '#111', this)"></div>
-                <div class="color-btn" style="background:#2c3e50;" onclick="setKatalkTheme('#2c3e50', '#ecf0f1', '#f1c40f', '#111', '#111', this)"></div>
+                <div class="color-btn active" style="background:#b2c7d9;" onclick="setKatalkTheme('#b2c7d9', '#fff', '#fee500', '#111', '#111', false, this)"></div>
+                <div class="color-btn" style="background:#202124;" onclick="setKatalkTheme('#202124', '#303134', '#fdd835', '#fff', '#111', true, this)"></div>
+                <div class="color-btn" style="background:#ffdce0;" onclick="setKatalkTheme('#ffdce0', '#fff', '#ffb6c1', '#111', '#111', false, this)"></div>
+                <div class="color-btn" style="background:#a7d7c5;" onclick="setKatalkTheme('#a7d7c5', '#fff', '#68d3a6', '#111', '#111', false, this)"></div>
+                <div class="color-btn" style="background:#c5bced;" onclick="setKatalkTheme('#c5bced', '#fff', '#9d8df2', '#111', '#fff', false, this)"></div>
+                <div class="color-btn" style="background:#fceea7;" onclick="setKatalkTheme('#fceea7', '#fff', '#ffdc3b', '#111', '#111', false, this)"></div>
+                <div class="color-btn" style="background:#2c3e50;" onclick="setKatalkTheme('#2c3e50', '#ecf0f1', '#f1c40f', '#111', '#111', true, this)"></div>
             </div>
 
             <div class="control-block">
@@ -394,7 +409,6 @@
     </div>
 
     <script>
-        // 전역 이미지 URL 저장소 
         const imageStates = {
             bg: { url: '', pos: '50% 50%' },
             other: { url: '', pos: '50% 50%' },
@@ -472,12 +486,28 @@
             updateStatusBarColor();
         }
 
-        function setKatalkTheme(bg, bubbleL, bubbleR, textL, textR, btn) {
+        // ⭐ 11.5 지능형 카카오톡 테마 세팅
+        function setKatalkTheme(bg, bubbleL, bubbleR, textL, textR, isDark, btn) {
             document.documentElement.style.setProperty('--kt-bg', bg);
             document.documentElement.style.setProperty('--kt-bubble-l', bubbleL);
             document.documentElement.style.setProperty('--kt-bubble-r', bubbleR);
             document.documentElement.style.setProperty('--kt-text-l', textL);
             document.documentElement.style.setProperty('--kt-text-r', textR);
+            
+            if (isDark) {
+                document.documentElement.style.setProperty('--kt-text-bg', '#ffffff');
+                document.documentElement.style.setProperty('--kt-date-bg', 'rgba(255,255,255,0.15)');
+                document.documentElement.style.setProperty('--kt-input-bg', '#1e1e1e');
+                document.documentElement.style.setProperty('--kt-input-box', '#2a2a2a');
+                document.documentElement.style.setProperty('--kt-input-icon', '#888888');
+            } else {
+                document.documentElement.style.setProperty('--kt-text-bg', '#111111');
+                document.documentElement.style.setProperty('--kt-date-bg', 'rgba(0,0,0,0.12)');
+                document.documentElement.style.setProperty('--kt-input-bg', '#ffffff');
+                document.documentElement.style.setProperty('--kt-input-box', '#f1f5f9');
+                document.documentElement.style.setProperty('--kt-input-icon', '#94a3b8');
+            }
+
             btn.parentElement.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             updateStatusBarColor();
@@ -508,7 +538,7 @@
             if (modeGallery) {
                 document.getElementById('status-bar').style.color = '#000';
             } else if (modeKatalk) {
-                document.getElementById('status-bar').style.color = getComputedStyle(document.documentElement).getPropertyValue('--kt-text-l');
+                document.getElementById('status-bar').style.color = getComputedStyle(document.documentElement).getPropertyValue('--kt-text-bg').trim();
             } else if (modeFace) {
                 document.getElementById('status-bar').style.color = '#fff';
             } else {
@@ -516,7 +546,6 @@
             }
         }
 
-        // --- 공통 이미지 위치 조절 함수 ---
         function updateImageStyle(stateKey, targetId) {
             const pos = `${document.getElementById(`x-${stateKey}`).value}% ${document.getElementById(`y-${stateKey}`).value}%`;
             imageStates[stateKey].pos = pos;
@@ -544,7 +573,6 @@
             }
         }
 
-        // 따옴표 오류 방지를 위해 템플릿 리터럴 내부 따옴표 제거 `url(${event...})`
         function handleImageUpload(inputId, stateKey, targetId, boxId, isProfile = false) {
             document.getElementById(inputId).addEventListener('change', function(e) {
                 if (e.target.files[0]) {
@@ -574,7 +602,6 @@
         handleImageUpload('in-profile', 'profile', null, 'ctrl-profile-box', true);
 
 
-        // 💡 갤러리 동적 추가
         function addGalleryItem() {
             const id = Date.now();
             const ctrl = document.createElement('div');
@@ -624,7 +651,6 @@
             view.style.display = 'block'; 
         }
 
-        // 💡 위젯 동적 추가
         const widgetTypes = {
             'msg': { icon: '💬', name: '메시지' },
             'fortune': { icon: '⭐', name: '오늘의 운세' },
@@ -661,7 +687,7 @@
                         </select>
                     </div>
                     <div class="input-group">
-                        <input type="text" placeholder="제목 (예: [시스템])" oninput="updateText('view-t-${id}', this.value); toggleW('${id}')">
+                        <input type="text" placeholder="제목 입력" oninput="updateText('view-t-${id}', this.value); toggleW('${id}')">
                     </div>
                 </div>
                 <div class="input-group" style="margin-bottom:0;">
@@ -684,7 +710,6 @@
         }
         function toggleW(id) { document.getElementById(`view-w-${id}`).style.display = 'block'; }
 
-        // 💡 카톡 말풍선 동적 추가 (프사 에러 완벽 픽스)
         function addChat(side) {
             const id = Date.now();
             const ctrl = document.createElement('div');
@@ -701,7 +726,6 @@
             const view = document.createElement('div');
             view.className = `chat-row ${side}`; view.id = `view-c-${id}`; view.style.display = 'none';
             
-            // 기존 프사가 있으면 따옴표 꼬임 방지를 위해 템플릿 리터럴로 style 삽입
             let profileStyle = '';
             if (side === 'left' && imageStates.profile.url) {
                 profileStyle = `style="background-image: ${imageStates.profile.url}; background-size: cover; background-position: ${imageStates.profile.pos}; background-repeat: no-repeat;"`;
@@ -723,7 +747,6 @@
             if(view) view.remove(); 
         }
 
-        // --- ⭐ ULTRA HQ 캡처 로직 ⭐ ---
         async function captureUltraHQ() {
             const btn = document.getElementById('btn-capture-action');
             const originalText = btn.innerText;
@@ -750,7 +773,6 @@
                     el.style.animation = "none";
                 });
 
-                // Background 이미지 속성 완벽 복사 (엑스박스 방지)
                 const origElements = target.querySelectorAll('*');
                 const cloneElements = clone.querySelectorAll('*');
                 for (let i = 0; i < origElements.length; i++) {
