@@ -1,842 +1,1096 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Phone Editor</title>
-    <link rel="icon" type="image/png" href="MOMO.png">
-    <link rel="apple-touch-icon" href="MOMO.png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <style>
-        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-        
-        :root {
-            --phone-bg: #ffffff;
-            --text-main: #111111;
-            --time-color: #ffffff; 
-            
-            --kt-bg: #b2c7d9;
-            --kt-bubble-l: #ffffff;
-            --kt-bubble-r: #fee500;
-            --kt-text-l: #111111;
-            --kt-text-r: #111111;
-            
-            --kt-text-bg: #111111; 
-            --kt-date-bg: rgba(0,0,0,0.12);
-            --kt-input-bg: #ffffff;
-            --kt-input-box: #f1f5f9;
-            --kt-input-icon: #94a3b8;
-            
-            --profile-img: url('');
-            --my-face-img: none;
-            --other-face-img: none; 
-            
-            --ui-bg: #ffffff;
-            --ui-surface: #f8fafc;
-            --ui-border: #e2e8f0;
-            --ui-accent: #0f172a;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mobile Phone Editor</title>
+<link rel="icon" type="image/png" href="MOMO.png">
+<link rel="apple-touch-icon" href="MOMO.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+:root{--ink:#0a0a0a;--sub:#4d4d4d;--mute:#8f8f8f;--line:#ececec;--line2:#dcdcdc;--soft:#f7f7f7;--bg:#f3f3f3}
+html,body{height:100%}
+body{background:#fff;color:var(--ink);font-size:14px;letter-spacing:-.01em;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;color:inherit}
+input,select,textarea{font:inherit;color:inherit}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
-        
-        body { 
-            background-color: #f1f5f9;
-            color: #1e293b; display: flex; justify-content: center; padding: 50px 20px; gap: 60px; min-height: 100vh; align-items: flex-start;
-        }
+/* ── layout ── */
+.app{display:grid;grid-template-columns:392px 1fr;grid-template-rows:60px 1fr;height:100vh}
+.top{grid-column:1/-1;display:flex;align-items:center;gap:28px;padding:0 20px 0 28px;border-bottom:1px solid var(--line);background:#fff;z-index:3}
+.brand{width:336px;flex:none;display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:800;letter-spacing:.2em}
+.brand b{font-weight:300}
+.brand i{width:8px;height:8px;border-radius:50%;background:var(--ink)}
+.tabs{display:flex;gap:30px;height:100%}
+.tabs button{height:100%;border:0;background:none;padding:0;font-size:13.5px;font-weight:600;color:var(--mute);position:relative;transition:color .15s}
+.tabs button:hover{color:var(--ink)}
+.tabs button.on{color:var(--ink)}
+.tabs button.on:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--ink)}
+.acts{margin-left:auto;display:flex;gap:8px}
+.panel{border-right:1px solid var(--line);min-height:0;overflow-y:auto;background:#fff}
+.panel::-webkit-scrollbar{width:6px}.panel::-webkit-scrollbar-thumb{background:#e2e2e2;border-radius:3px}
+.pbody{padding:6px 28px 64px;counter-reset:sec}
+.view{position:relative;overflow:hidden;background:var(--bg)}
+.scaler{position:absolute;left:50%;top:50%;transform-origin:center center;transition:transform .2s}
+.cap{position:absolute;left:0;right:0;bottom:24px;text-align:center;font-size:11px;font-weight:600;letter-spacing:.24em;color:#a8a8a8}
 
-        .controls { 
-            background: var(--ui-bg); 
-            padding: 40px; border-radius: 32px; width: 540px; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.05); 
-            max-height: 90vh; overflow-y: auto; 
-        }
-        .controls::-webkit-scrollbar { width: 8px; }
-        .controls::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        .controls h2 { margin-bottom: 35px; font-size: 28px; color: #0f172a; text-align: center; font-weight: 800; letter-spacing: -1px; }
-        
-        .sec-title { font-size: 16px; font-weight: 800; color: #64748b; margin: 35px 0 15px 0; padding-bottom: 12px; border-bottom: 2px solid var(--ui-surface); display: flex; justify-content: space-between; align-items: center;}
+/* ── sections ── */
+.card{padding:28px 0;border-bottom:1px solid var(--line)}
+.card:last-child{border-bottom:0}
+.ct{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:20px;min-height:26px}
+.ct>span{display:flex;align-items:baseline;gap:12px;font-size:16px;font-weight:700;letter-spacing:-.03em}
+.ct>span:before{counter-increment:sec;content:counter(sec,decimal-leading-zero);font-size:11px;font-weight:500;color:#b0b0b0;letter-spacing:.04em;font-variant-numeric:tabular-nums}
 
-        .color-palette { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; max-width: 280px;}
-        .color-btn { width: 30px; height: 30px; border-radius: 50%; border: 1px solid #e2e8f0; cursor: pointer; transition: 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-        .color-btn:hover { transform: scale(1.1); }
-        .color-btn.active { border-color: #0f172a; box-shadow: 0 0 0 3px #fff inset, 0 0 0 2px #0f172a; }
+.chips{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin:22px 0 2px}
+.chip{display:flex;flex-direction:column;align-items:center;gap:8px;padding:17px 0 15px;background:#fff;border:0;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--sub);transition:background .15s,color .15s}
+.chip:nth-child(3n){border-right:0}.chip:nth-child(n+4){border-bottom:0}
+.chip svg{width:20px;height:20px;color:#a0a0a0}
+.chip:hover{background:var(--soft)}
+.chip.on{background:var(--ink);color:#fff}.chip.on svg{color:#fff}
 
-        .control-block {
-            background: #ffffff;
-            border: 1px solid var(--ui-border);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            transition: all 0.3s ease;
-        }
+/* ── controls ── */
+.fld{display:block;margin-bottom:18px}.fld:last-child{margin-bottom:0}
+.lb{display:block;font-size:12px;font-weight:500;color:var(--mute);margin-bottom:8px}
+.in{width:100%;height:44px;border:1px solid #e4e4e4;border-radius:10px;padding:0 14px;font-size:14px;background:#fff;outline:none;transition:border-color .15s}
+.in::placeholder{color:#bdbdbd}
+.in:hover{border-color:#cfcfcf}.in:focus{border-color:var(--ink)}
+.in.ta{height:auto;min-height:74px;padding:12px 14px;line-height:1.55;resize:vertical;display:block}
+.in.sm{height:34px;font-size:13px;padding:0 11px;border-radius:8px}
+select.in{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:32px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g2 .fld,.g3 .fld{margin-bottom:18px}
+.seg{display:flex;border:1px solid #e4e4e4;border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;height:34px;border:0;background:none;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--mute);white-space:nowrap;padding:0 6px;transition:.15s}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--ink);color:#fff}
+.seg.sm{border-radius:8px;padding:2px}.seg.sm button{height:26px;font-size:12px;border-radius:6px}
+.sws{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:26px;height:26px;border-radius:50%;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);transition:box-shadow .15s}
+.sw.on{box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 0 0 3px #fff,0 0 0 4px var(--ink)}
+.tog{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:40px;font-size:13.5px;font-weight:500;cursor:pointer}
+.tog input{display:none}
+.tog i{width:38px;height:22px;border-radius:11px;background:#e3e3e3;position:relative;transition:.2s;flex:none}
+.tog i:after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+.tog input:checked+i{background:var(--ink)}.tog input:checked+i:after{left:18px}
+.rg{display:flex;align-items:center;gap:14px;font-size:12px;font-weight:500;color:var(--mute)}
+.card>.rg{margin-bottom:18px}.card>.rg:last-child{margin-bottom:0}
+.rg span{width:40px;flex:none;white-space:nowrap}
+.rg b{width:50px;text-align:right;font-weight:500;color:var(--ink);flex:none;font-variant-numeric:tabular-nums}
+.rg input{flex:1;appearance:none;height:2px;background:#dedede;outline:none}
+.rg input::-webkit-slider-thumb{appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ink);cursor:pointer;box-shadow:0 0 0 4px #fff}
+.rg input::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--ink);border:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;padding:0 18px;border-radius:10px;border:1px solid var(--ink);background:var(--ink);color:#fff;font-size:13.5px;font-weight:600;white-space:nowrap;transition:.15s}
+.btn:hover{background:#2b2b2b}
+.btn.ghost{background:#fff;color:var(--ink);border-color:#e0e0e0}.btn.ghost:hover{border-color:var(--ink)}
+.btn.line{width:100%;background:#fff;border:1px dashed #d0d0d0;color:var(--sub)}.btn.line:hover{border-color:var(--ink);color:var(--ink)}
+.btn.sm{height:36px;padding:0 15px;font-size:13px;border-radius:9px}
+.btn.full{width:100%}
+.btn.danger{background:#fff;color:#c93b3b;border-color:#eed6d6}.btn.danger:hover{border-color:#c93b3b}
+.mini{height:26px;padding:0 10px;border:1px solid #e4e4e4;background:#fff;border-radius:7px;font-size:11.5px;font-weight:600;color:var(--sub);transition:.15s}
+.mini:hover{border-color:var(--ink);color:var(--ink)}
+.ibs{display:flex;gap:4px;margin-left:auto}
+.ib{width:28px;height:28px;border:1px solid #e6e6e6;background:#fff;border-radius:7px;font-size:12px;color:var(--sub);display:grid;place-items:center;flex:none;transition:.15s}
+.ib:hover{border-color:var(--ink);color:var(--ink)}
+.item{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;background:#fff}
+.item.msg.right{background:#fafafa}
+.item .in.ta{min-height:48px}
+.item-h{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.item-f{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.badge{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--mute)}
+.hint{font-size:12px;color:var(--mute);line-height:1.65}
+.hint.box{border-left:2px solid var(--ink);padding:2px 0 2px 12px;margin-bottom:20px;color:var(--sub)}
+.imgf{margin-bottom:14px}.imgf:last-child{margin-bottom:0}
+.imgf-top{display:flex;align-items:center;gap:12px}
+.th{width:44px;height:44px;border-radius:10px;border:1px solid #e6e6e6;background:#fafafa center/cover no-repeat;flex:none;display:grid;place-items:center;color:#b5b5b5;font-size:16px}
+.imgf-tx{flex:1;min-width:0}.imgf-tx b{display:block;font-size:13.5px;font-weight:600}.imgf-tx span{font-size:11.5px;color:var(--mute)}
+.imgf-adj{display:flex;flex-direction:column;gap:14px;margin-top:12px;padding:16px;border:1px solid var(--line);border-radius:12px}
+.upl{position:relative;overflow:hidden}
+.upl input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.gthumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+.gt{position:relative;aspect-ratio:1;border-radius:8px;background:var(--soft) center/cover;cursor:pointer;outline:1px solid transparent;outline-offset:2px}
+.gt.on{outline:1.5px solid var(--ink)}
+.gt .x{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:10px;display:grid;place-items:center}
+.row{display:flex;gap:8px;align-items:center}
+.sep{height:1px;background:var(--line);margin:20px 0}
 
-        .input-group { margin-bottom: 16px; position: relative; width: 100%; }
-        .input-group:last-child { margin-bottom: 0; }
-        
-        .input-group label { display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 700; margin-bottom: 10px; color: #475569; min-height: 28px; }
-        
-        .input-group input[type="text"], .input-group textarea, .input-group select { 
-            width: 100%; padding: 14px 18px; border-radius: 14px; 
-            border: 1px solid var(--ui-border); background: #f8fafc; 
-            font-size: 15px; transition: 0.2s; color: #0f172a; 
-        }
-        .input-group input[type="file"] { padding: 10px 14px; font-size: 13px; color: #64748b; cursor: pointer; border: 1px solid var(--ui-border); border-radius: 10px; width: 100%; background: #f8fafc; }
-        
-        .input-group input[type="text"]:focus, .input-group textarea:focus, .input-group select:focus { 
-            border-color: #0f172a; background: #fff; outline: none; box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.05); 
-        }
-        .input-group textarea { resize: none; height: 80px; }
-        
-        .row { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-end; }
-        .row .input-group { flex: 1; margin-bottom: 0; }
+#busy{position:fixed;inset:0;background:rgba(255,255,255,.75);backdrop-filter:blur(6px);display:none;place-items:center;z-index:100}
+#busy.on{display:grid}
+#busy .bx{width:260px;text-align:center}
+#busyTx{font-size:13px;font-weight:600;margin-bottom:14px}
+#busy .bar{height:2px;background:#e5e5e5;overflow:hidden}
+#busyBar{display:block;height:100%;width:0;background:var(--ink);transition:width .2s}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,12px);background:var(--ink);color:#fff;font-size:13px;font-weight:500;padding:12px 18px;border-radius:10px;opacity:0;transition:.25s;z-index:101;pointer-events:none}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#off{position:fixed;left:-20000px;top:0;pointer-events:none}
 
-        .img-controls { display: none; flex-direction: column; gap: 10px; margin-top: 12px; background: #f1f5f9; padding: 14px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .img-ctrl-row { display: flex; align-items: center; font-size: 12px; color: #475569; font-weight: 700; gap: 12px; }
-        .img-ctrl-row span { width: 30px; text-align: right; }
-        .img-ctrl-row input[type="range"] { flex: 1; height: 6px; appearance: none; background: #cbd5e1; border-radius: 3px; outline: none; }
-        .img-ctrl-row input[type="range"]::-webkit-slider-thumb { appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #0f172a; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+@media (max-width:900px){
+  .app{grid-template-columns:1fr;grid-template-rows:auto 60vh auto;height:auto}
+  .top{flex-wrap:wrap;gap:0 12px;padding:14px 18px 0}
+  .brand{width:auto}
+  .acts .btn{height:32px;padding:0 12px;font-size:12.5px}
+  .tabs{order:3;width:100%;height:44px;gap:24px;margin-top:6px}
+  .view{grid-row:2;min-height:60vh}
+  .panel{grid-row:3;border-right:0;overflow:visible}
+  .pbody{padding:6px 18px 56px}
+}
 
-        .btn-action { 
-            display: inline-flex; align-items: center; justify-content: center; gap: 6px; 
-            padding: 8px 14px; background: #f1f5f9; border: none; border-radius: 10px; 
-            font-size: 13px; font-weight: 700; cursor: pointer; color: #475569; transition: 0.2s; 
-        }
-        .btn-action:hover { background: #e2e8f0; color: #0f172a; }
-        
-        .btn-delete { 
-            background: #fee2e2; color: #ef4444; font-size: 13px; font-weight: 800; 
-            padding: 6px 14px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s;
-            margin-left: auto;
-        }
-        .btn-delete:hover { background: #fecaca; }
+/* ───────── Phone (captured) ───────── */
+.stage{display:inline-block;padding:40px 40px 58px;background:transparent}
+.stage.flat{padding:0}
+.dev{position:relative;border-radius:68px;padding:3px;box-shadow:0 34px 50px -26px rgba(0,0,0,.5),0 0 0 1px rgba(0,0,0,.06)}
+.stage.nosh .dev{box-shadow:0 0 0 1px rgba(0,0,0,.06)}
+.bez{background:#050506;border-radius:65px;padding:11px}
+.dev.notch{border-radius:62px}.dev.notch .bez{border-radius:59px}.dev.notch .scr{border-radius:47px}
+.dev.punch{border-radius:50px;padding:2px}.dev.punch .bez{border-radius:48px;padding:8px}.dev.punch .scr{border-radius:40px}
+.sbtn{position:absolute;width:4px;border-radius:2px}
+.scr{position:relative;width:380px;height:824px;border-radius:54px;overflow:hidden;background:#fff;color:#111}
+.islandc{position:absolute;top:11px;left:50%;margin-left:-62px;width:124px;height:36px;background:#000;border-radius:20px;z-index:40}
+.notchc{position:absolute;top:0;left:50%;margin-left:-82px;width:164px;height:31px;background:#000;border-radius:0 0 20px 20px;z-index:40}
+.punchc{position:absolute;top:13px;left:50%;margin-left:-6.5px;width:13px;height:13px;border-radius:50%;background:#000;z-index:40}
+.bgl{position:absolute;left:0;top:0;right:0;bottom:0;z-index:0}
+.lay{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;flex-direction:column;z-index:2}
+.imgbox{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden}
+.imgbox>div{position:absolute;left:0;top:0;right:0;bottom:0;background-size:cover;background-repeat:no-repeat}
+.home{position:absolute;bottom:8px;left:50%;margin-left:-68px;width:136px;height:5px;border-radius:3px;z-index:30}
 
-        .btn-add { 
-            display: flex; width: 100%; justify-content: center; padding: 18px; 
-            border: 2px dashed #cbd5e1; background: #f8fafc; border-radius: 16px; 
-            color: #64748b; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 10px; transition: 0.2s; 
-        }
-        .btn-add:hover { border-color: #0f172a; color: #0f172a; background: #ffffff; }
+.sb{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 14px 0;font-size:16.5px;font-weight:600;letter-spacing:-.2px;position:relative;z-index:5}
+.sb-l{width:118px;text-align:center}
+.sb-r{width:118px;display:flex;align-items:center;justify-content:center;gap:5px}
+.sb.notch{height:48px;padding-top:2px}
+.sb.punch{height:40px;padding:4px 22px 0;font-size:14.5px}
+.sb.punch .sb-l{width:auto;text-align:left}.sb.punch .sb-r{width:auto}
+.bars{display:flex;align-items:flex-end;gap:1.5px;height:11px}
+.bars i{width:3px;border-radius:1px;display:block}
+.net{font-size:13.5px;font-weight:700;letter-spacing:-.3px}
+.pct{font-size:12.5px;font-weight:600}
+.batw{display:flex;align-items:center}
+.bat{width:25px;height:12.5px;border-radius:4px;border:1.2px solid;padding:1.5px}
+.bat i{display:block;height:100%;border-radius:1.8px}
+.nub{width:1.5px;height:4px;border-radius:0 1px 1px 0;margin-left:1px}
 
-        .btn-capture { 
-            display: block; width: 100%; padding: 22px; margin-top: 40px; 
-            background: #0f172a; color: #fff; border: none; border-radius: 20px; 
-            font-size: 18px; font-weight: 800; cursor: pointer; transition: 0.3s;
-        }
-        .btn-capture:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+/* lock */
+.lk{text-align:center;padding-top:8px}
+.lk-date{font-size:19px;font-weight:600;letter-spacing:-.2px}
+.lk-time{font-size:94px;line-height:1.02;letter-spacing:-3px;margin-top:0}
+.lk-notis{margin-top:30px;padding:0 12px;display:flex;flex-direction:column;gap:8px}
+.nt{display:flex;gap:11px;align-items:flex-start;padding:12px 14px;border-radius:22px;text-align:left}
+.nt.light{background:rgba(246,246,248,.86);color:#111}
+.nt.dark{background:rgba(28,28,30,.76);color:#fff}
+.nt-ic{width:38px;height:38px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;color:#fff;font-size:19px;font-weight:800;line-height:1}
+.nt-tx{flex:1;min-width:0}
+.nt-h{display:flex;justify-content:space-between;gap:8px;font-size:15px;font-weight:700;line-height:1.3;letter-spacing:-.2px}
+.nt-h span{font-size:13px;font-weight:500;opacity:.5;flex:none}
+.nt-b{font-size:14.5px;line-height:1.35;margin-top:1px;white-space:pre-wrap;word-break:break-all;letter-spacing:-.2px}
+.lk-btn{position:absolute;bottom:46px;width:50px;height:50px;border-radius:50%;background:rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;z-index:3}
 
-        .tabs { 
-            display: flex; gap: 6px; margin-bottom: 35px; background: #f1f5f9; 
-            padding: 6px; border-radius: 20px; 
-        }
-        .tab-btn { 
-            flex: 1; padding: 14px; border: none; background: transparent; border-radius: 16px; 
-            cursor: pointer; font-weight: 800; color: #64748b; transition: 0.3s; font-size: 14px; 
-        }
-        .tab-btn.active { background: #fff; color: #0f172a; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+/* kakao */
+.kt-head{height:52px;flex:none;display:flex;align-items:center;padding:0 16px 0 14px;gap:10px}
+.kt-back{display:flex;align-items:center;gap:7px;font-size:15px;font-weight:500;min-width:20px}
+.kt-name{flex:1;font-size:17px;font-weight:700;letter-spacing:-.4px}
+.kt-icons{display:flex;gap:16px;align-items:center}
+.list{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.inner{flex:1 0 auto}
+.kt-inner{padding:6px 12px 14px}
+.kt-dw{text-align:center;margin:4px 0 6px}
+.kt-date{display:inline-block;font-size:12px;padding:5px 14px;border-radius:14px}
+.kt-row{display:flex;margin-top:4px;align-items:flex-start}
+.kt-row.first{margin-top:12px}
+.kt-row.r{justify-content:flex-end}
+.kt-pf{width:40px;height:40px;border-radius:15px;flex:none;margin-right:9px;position:relative;overflow:hidden;background:#9fb3c8;display:flex;align-items:flex-end;justify-content:center}
+.kt-pf.kph{background:none;height:1px}
+.kt-n{font-size:12.5px;margin:0 0 5px 1px;opacity:.85;letter-spacing:-.2px}
+.kt-line{display:flex;align-items:flex-end;gap:5px}
+.kt-b{padding:8px 11px;border-radius:15px;font-size:14.5px;line-height:1.42;white-space:pre-wrap;word-break:break-all;max-width:238px;letter-spacing:-.2px}
+.kt-row.l .kt-b.tail{border-top-left-radius:4px}.kt-row.r .kt-b.tail{border-top-right-radius:4px}
+.kt-meta{display:flex;flex-direction:column;font-size:10px;line-height:1.3;flex:none;padding-bottom:1px}
+.kt-meta.r{align-items:flex-end}
+.kt-meta i{font-style:normal;color:#f2c200;font-weight:800;font-size:10.5px}
+.kt-meta span{opacity:.62}
+.kt-img{width:190px;border-radius:14px;overflow:hidden;position:relative;flex:none}
+.kt-in{flex:none;display:flex;align-items:center;gap:12px;padding:8px 14px 32px}
+.kt-in .f{flex:1;height:38px;border-radius:19px}
+.dots{display:flex;gap:4px;padding:5px 2px}
+.dots i{width:7px;height:7px;border-radius:50%;display:block}
 
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+/* imessage */
+.im-head{flex:none;display:flex;align-items:flex-start;justify-content:space-between;padding:2px 14px 8px;background:#f6f6f8;border-bottom:1px solid rgba(0,0,0,.08)}
+.im-back{display:flex;align-items:center;gap:6px;font-size:16px;padding-top:15px;width:64px;color:#0a84ff}
+.im-back span{background:#0a84ff;color:#fff;font-size:12px;font-weight:600;padding:1px 7px;border-radius:10px}
+.im-who{text-align:center}
+.im-av{width:52px;height:52px;border-radius:50%;margin:0 auto;background:linear-gradient(#a8aeba,#868b96);color:#fff;font-size:22px;font-weight:600;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.im-nm{font-size:12px;margin-top:4px;color:#111;letter-spacing:-.2px}
+.im-vid{width:64px;display:flex;justify-content:flex-end;padding-top:16px}
+.im-inner{padding:10px 14px 12px}
+.im-date{text-align:center;font-size:11.5px;color:#8a8a8e;margin:4px 0 4px;line-height:1.4}
+.im-date b{font-weight:600}
+.im-row{display:flex;margin-top:2px}.im-row.first{margin-top:10px}.im-row.r{justify-content:flex-end}
+.im-b{max-width:262px;padding:8px 13px;border-radius:19px;font-size:16px;line-height:1.3;white-space:pre-wrap;word-break:break-all;letter-spacing:-.2px}
+.im-row.l .im-b{background:#e9e9eb;color:#000}
+.im-row.l.last .im-b{border-bottom-left-radius:6px}.im-row.r.last .im-b{border-bottom-right-radius:6px}
+.im-img{width:200px;border-radius:18px;overflow:hidden;position:relative}
+.im-read{text-align:right;font-size:11px;color:#8a8a8e;margin-top:3px;padding-right:4px}
+.im-in{flex:none;display:flex;align-items:center;gap:10px;padding:8px 12px 34px;background:#fff}
+.im-plus{width:34px;height:34px;border-radius:50%;background:#e9e9eb;display:flex;align-items:center;justify-content:center;flex:none}
+.im-field{flex:1;height:36px;border:1px solid #d1d1d6;border-radius:18px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;color:#b0b0b5;font-size:15.5px}
 
-        /* --- 프리뷰 폰 --- */
-        .phone { 
-            width: 400px; height: 820px; 
-            background-color: var(--phone-bg);
-            border-radius: 55px; 
-            border: 14px solid #111; 
-            box-shadow: 0 30px 60px rgba(0,0,0,0.15); 
-            position: relative; overflow: hidden;
-            display: flex; flex-direction: column;
-            transition: background-color 0.4s ease;
-            flex-shrink: 0;
-            box-sizing: border-box; 
-        }
+/* facetime */
+.fc-shade{position:absolute;left:0;right:0;top:0;height:230px;background:linear-gradient(rgba(0,0,0,.5),rgba(0,0,0,0));z-index:1}
+.fc-top{text-align:center;color:#fff;margin-top:14px;position:relative;z-index:2}
+.fc-top h2{font-size:30px;font-weight:600;letter-spacing:-.5px}
+.fc-top p{font-size:16px;opacity:.9;margin-top:4px;font-variant-numeric:tabular-nums}
+.fc-pip{position:absolute;top:140px;right:16px;width:112px;height:168px;border-radius:18px;overflow:hidden;background:#3a3a3c;box-shadow:0 10px 24px rgba(0,0,0,.35);z-index:3}
+.fc-bar{position:absolute;left:18px;right:18px;bottom:40px;background:rgba(38,38,40,.78);border-radius:32px;padding:12px 16px;display:flex;justify-content:space-between;z-index:3}
+.fc-btn{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.17);display:flex;align-items:center;justify-content:center}
+.fc-btn.red{background:#ff3b30}
 
-        .dynamic-island { 
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%); 
-            width: 125px; height: 36px; background: #000; border-radius: 24px; z-index: 50; 
-        }
+/* incoming call */
+.cl{text-align:center;color:#fff;padding-top:64px;position:relative;z-index:2}
+.cl-sub{font-size:17px;opacity:.72;letter-spacing:-.2px}
+.cl-name{font-size:38px;font-weight:500;margin-top:4px;letter-spacing:-.8px}
+.cl-bot{position:absolute;left:0;right:0;bottom:66px;padding:0 44px;z-index:2}
+.cl-row{display:flex;justify-content:space-between}
+.cl-it{text-align:center;color:#fff;font-size:13.5px;width:80px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.cl-it .c{border-radius:50%;display:flex;align-items:center;justify-content:center}
+.cl-it .c.s{width:46px;height:46px;background:rgba(255,255,255,.18)}
+.cl-it .c.b{width:76px;height:76px}
 
-        .phone-bg-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 0; }
-        .katalk-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--kt-bg); z-index: 0; display: none; transition: background-color 0.3s; }
-        .gallery-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #fff; z-index: 0; display: none; }
-        .face-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #333; background-size: cover; background-position: center; background-repeat: no-repeat; z-index: 0; display: none; }
+/* gallery */
+.gl-head{display:flex;justify-content:space-between;align-items:flex-end;padding:8px 16px 0}
+.gl-head h3{font-size:30px;font-weight:800;letter-spacing:-.8px}
+.gl-sel{font-size:14px;font-weight:600;background:#ececef;border-radius:14px;padding:5px 12px;margin-bottom:5px}
+.gl-sub{padding:2px 16px 10px;font-size:14px;color:#8a8a8e}
+.gl-grid{display:grid;gap:2px}
+.gl-t{position:relative;overflow:hidden;aspect-ratio:1/1;background:#ececef}
+.gl-tab{position:absolute;left:0;right:0;bottom:0;height:88px;background:rgba(249,249,250,.97);border-top:1px solid rgba(0,0,0,.08);display:flex;justify-content:space-around;padding-top:9px;z-index:4}
+.gl-tab div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;font-weight:500;color:#9a9aa0;width:70px}
+.gl-tab div.on{color:#0a84ff}
+.gl-tab i{width:24px;height:22px;border-radius:6px;background:currentColor;opacity:.9;display:block}
 
-        .status-bar { position: relative; z-index: 10; display: flex; justify-content: space-between; padding: 20px 24px; font-size: 16px; font-weight: 800; color: var(--text-main); transition: color 0.3s; }
-        .status-icons { display: flex; gap: 7px; align-items: center; font-size: 15px; }
 
-        .screen-mode { display: none; position: relative; z-index: 1; flex: 1; flex-direction: column; }
-        .screen-mode.active { display: flex; }
+/* ───────── Compact editor ───────── */
+.app{grid-template-columns:340px 1fr;grid-template-rows:52px 1fr}
+.top{padding:0 16px 0 24px;gap:24px}
+.brand{width:292px;font-size:11px;letter-spacing:.24em;gap:9px}
+.brand i{width:6px;height:6px}
+.tabs{gap:24px}
+.tabs button{font-size:12.5px;font-weight:500}
+.tabs button.on{font-weight:600}
+.tabs button.on:after{height:1.5px}
+.acts{gap:6px}
+.acts .btn.sm{height:30px;padding:0 12px;font-size:12px;border-radius:7px}
+.pbody{padding:4px 24px 56px}
+.card{padding:22px 0}
+.ct{margin-bottom:16px;min-height:22px}
+.ct>span{font-size:13.5px;font-weight:600;gap:10px}
+.ct>span:before{font-size:10px}
+.chips{border-radius:10px;margin:18px 0 0}
+.chip{padding:12px 0 10px;gap:6px;font-size:11px;font-weight:500}
+.chip svg{width:16px;height:16px}
+.fld{margin-bottom:14px}.g2 .fld,.g3 .fld{margin-bottom:14px}.g2,.g3{gap:8px}
+.lb{font-size:11px;margin-bottom:6px}
+.in{height:36px;font-size:13px;border-radius:8px;padding:0 11px}
+.in.ta{min-height:60px;padding:9px 11px;font-size:13px}
+.item .in.ta{min-height:40px}
+.in.sm{height:30px;font-size:12px;border-radius:7px;padding:0 9px}
+select.in{background-position:right 11px center;padding-right:28px}
+.seg{border-radius:8px;padding:2px;gap:2px}
+.seg button{height:28px;font-size:11.5px;font-weight:500;border-radius:6px}
+.seg button.on{font-weight:600}
+.seg.sm button{height:22px;font-size:11px;border-radius:5px}
+.sws{gap:8px}.sw{width:22px;height:22px}
+.sw.on{box-shadow:inset 0 0 0 1px rgba(0,0,0,.12),0 0 0 2px #fff,0 0 0 3px var(--ink)}
+.tog{min-height:32px;font-size:12.5px}
+.tog i{width:32px;height:18px;border-radius:9px}
+.tog i:after{width:14px;height:14px;top:2px;left:2px}
+.tog input:checked+i:after{left:16px}
+.rg{font-size:11px;gap:12px}.rg b{font-size:11px}
+.card>.rg{margin-bottom:14px}
+.rg input::-webkit-slider-thumb{width:12px;height:12px}
+.btn{height:36px;font-size:12.5px;border-radius:8px;padding:0 14px}
+.btn.sm{height:28px;font-size:11.5px;border-radius:7px;padding:0 11px}
+.mini{height:22px;font-size:10.5px;padding:0 8px;border-radius:6px}
+.ib{width:24px;height:24px;font-size:10.5px;border-radius:6px}
+.item{padding:12px;border-radius:10px;margin-bottom:8px}
+.item-h{margin-bottom:10px;gap:6px}
+.badge{font-size:10px}
+.hint{font-size:11px}
+.hint.box{margin-bottom:16px}
+.th{width:36px;height:36px;border-radius:8px;font-size:14px}
+.imgf-tx b{font-size:12.5px;font-weight:500}.imgf-tx span{font-size:10.5px}
+.imgf-adj{padding:12px;gap:12px;border-radius:10px}
+.sep{margin:16px 0}
+.cap{font-size:10px;bottom:20px}
+@media (max-width:900px){
+  .app{grid-template-rows:auto 60vh auto}
+  .top{padding:12px 16px 0}
+  .tabs{height:40px}
+}
 
-        /* 1. 잠금화면 */
-        #mode-lock { padding: 0 20px; }
-        .lock-date-time { text-align: center; margin-top: 55px; margin-bottom: 35px; color: var(--time-color); text-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: color 0.3s; }
-        .lock-date-time h1 { font-size: 82px; font-weight: 200; letter-spacing: -3px; line-height: 1; min-height: 82px; }
-        .lock-date-time p { font-size: 18px; font-weight: 500; min-height: 24px; margin-top: 8px;}
+/* ───────── Phone refinement ───────── */
+.dev{border-radius:66px;padding:2.5px;box-shadow:0 44px 60px -34px rgba(0,0,0,.45),0 0 0 1px rgba(0,0,0,.05)}
+.bez{border-radius:63.5px;padding:10px}
+.scr{border-radius:54px}
+.sbtn{width:3px}
+.islandc{top:11px;width:118px;margin-left:-59px;height:34px}
+.sb{font-size:15.5px;font-weight:600;padding-top:5px}
+.sb-l{letter-spacing:-.1px}
+.bars{height:10px;gap:1.5px}.bars i{width:2.8px}
+.net{font-size:12.5px}
+.bat{width:24px;height:11.5px;border-radius:3.6px;border-width:1px}
+/* lock */
+.lk{padding-top:10px}
+.lk-date{font-size:17px;font-weight:500;letter-spacing:-.1px;opacity:.92}
+.lk-time{font-size:88px;line-height:1;letter-spacing:-2.5px;margin-top:2px}
+.lk-notis{position:absolute;left:10px;right:10px;bottom:118px;margin:0;padding:0;gap:6px}
+.nt{padding:11px 13px;border-radius:20px;gap:11px;align-items:center}
+.nt.glass{background:rgba(255,255,255,.18);color:#fff}
+.nt.light{background:rgba(255,255,255,.9);color:#111}
+.nt.dark{background:rgba(18,18,20,.72);color:#fff}
+.nt-ic{width:36px;height:36px;border-radius:9px;font-size:17px}
+.nt-h{font-size:14.5px;font-weight:600;letter-spacing:-.2px}
+.nt-h span{font-size:12.5px;font-weight:400;opacity:.62}
+.nt-b{font-size:14.5px;line-height:1.3;opacity:.92;margin-top:1px}
+.lk-btn{bottom:44px;width:48px;height:48px}
+/* kakao */
+.kt-head{height:48px;padding:0 16px;gap:8px}
+.kt-name{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.kt-back{font-size:14px;gap:6px}
+.kt-icons{gap:18px}
+.kt-inner{padding:4px 12px 14px}
+.kt-date{font-size:11px;padding:4px 12px;border-radius:11px}
+.kt-row{margin-top:5px}.kt-row.first{margin-top:14px}
+.kt-pf{width:38px;height:38px;border-radius:14px;margin-right:8px}
+.kt-n{font-size:12px;margin-bottom:4px;opacity:.8}
+.kt-b{padding:7px 11px;border-radius:14px;font-size:14px;line-height:1.42;max-width:230px}
+.kt-meta{font-size:9.5px}
+.kt-in{padding:7px 12px 30px;gap:12px}
+.kt-in .f{height:36px;border-radius:18px}
+/* imessage */
+.im-head{padding:0 14px 10px;background:#f7f7f9;border-bottom:1px solid rgba(0,0,0,.06)}
+.im-back{font-size:15px;padding-top:14px}
+.im-back span{font-size:11px;padding:1px 6px}
+.im-av{width:48px;height:48px;font-size:20px;background:linear-gradient(#b3b8c3,#8e939e)}
+.im-nm{font-size:11.5px;margin-top:5px;color:#222}
+.im-vid{padding-top:14px}
+.im-date{font-size:11px;margin:6px 0 6px}
+.im-b{font-size:15.5px;padding:7px 12px;border-radius:18px;line-height:1.32}
+.im-row{margin-top:2px}.im-row.first{margin-top:10px}
+.im-row.l .im-b{background:#e9e9eb}
+.im-in{padding:6px 12px 32px}
+.im-plus{width:32px;height:32px}
+.im-field{height:34px;font-size:15px;border-color:#dcdce0}
+/* facetime */
+.fc-shade{height:200px;background:linear-gradient(rgba(0,0,0,.42),rgba(0,0,0,0))}
+.fc-top{margin-top:16px}
+.fc-top h2{font-size:26px;font-weight:600;letter-spacing:-.4px}
+.fc-top p{font-size:15px;opacity:.8;margin-top:3px}
+.fc-pip{top:136px;right:14px;width:104px;height:156px;border-radius:16px;box-shadow:0 12px 28px rgba(0,0,0,.3)}
+.fc-bar{left:22px;right:22px;bottom:42px;background:rgba(255,255,255,.14);border-radius:30px;padding:10px 14px}
+.fc-btn{width:52px;height:52px;background:rgba(255,255,255,.14)}
+/* call */
+.cl{padding-top:74px}
+.cl-sub{font-size:15px;opacity:.6}
+.cl-name{font-size:34px;font-weight:500;margin-top:6px;letter-spacing:-.6px}
+.cl-bot{bottom:64px;padding:0 48px}
+.cl-it{font-size:12.5px;gap:9px;opacity:1}
+.cl-it .c.s{width:44px;height:44px;background:rgba(255,255,255,.14)}
+.cl-it .c.b{width:70px;height:70px}
+/* gallery */
+.gl-head{padding:10px 16px 0}
+.gl-head h3{font-size:28px;font-weight:700;letter-spacing:-.6px}
+.gl-sel{font-size:13px;font-weight:600;background:#f0f0f2;padding:5px 12px;border-radius:13px}
+.gl-sub{font-size:13px;padding:2px 16px 12px;color:#8e8e93}
+.gl-grid{gap:1.5px}
+.gl-t{background:#f2f2f4}
+.gl-tab{height:84px;background:#fafafa;border-top:1px solid rgba(0,0,0,.06);padding-top:8px}
+.gl-tab div{font-size:10px;gap:3px;color:#a1a1a6}
+.gl-tab div.on{color:#111}
 
-        .widget-area { display: flex; flex-direction: column; gap: 16px; padding: 0 5px; }
-        .widget { 
-            background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(25px); 
-            border-radius: 22px; padding: 18px 22px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); 
-        }
-        .w-header { font-size: 13px; font-weight: 800; color: #64748b; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .w-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-        .w-desc { font-size: 14px; color: #334155; line-height: 1.5; word-break: break-all; }
-
-        /* 2. 영상통화 */
-        #mode-face { align-items: center; }
-        .face-top { text-align: center; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.5); margin-top: 60px; }
-        .face-top h2 { font-size: 40px; font-weight: 600; min-height: 40px; }
-        .face-top p { font-size: 18px; opacity: 0.9; margin-top: 8px; }
-        .face-pip { 
-            width: 115px; height: 170px; background-color: rgba(255,255,255,0.2); 
-            background-size: cover; background-position: center; background-repeat: no-repeat;
-            border-radius: 20px; position: absolute; top: 160px; right: 24px; border: 1.5px solid rgba(255,255,255,0.6); 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-        .face-bottom { position: absolute; bottom: 60px; width: 100%; display: flex; justify-content: center; gap: 28px; }
-        .f-btn { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.25); backdrop-filter: blur(15px); display: flex; justify-content: center; align-items: center; font-size: 32px; color: #fff; }
-        .f-btn.red { background: #ef4444; border: none; }
-
-        /* 3. 카카오톡 - 리얼 비율 패치 */
-        .katalk-header { display: flex; align-items: center; padding: 18px 20px; font-size: 20px; font-weight: 700; color: var(--kt-text-bg); gap: 14px; transition: color 0.3s; }
-        .chat-area { flex: 1; display: flex; flex-direction: column; gap: 18px; padding: 0 16px 90px 16px; overflow-y: hidden; }
-        .chat-date { align-self: center; background: var(--kt-date-bg); color: #fff; font-size: 12px; padding: 6px 18px; border-radius: 20px; margin-bottom: 12px; display: none; transition: 0.3s; }
-        
-        .chat-row { display: flex; gap: 10px; align-items: flex-start; max-width: 85%; }
-        .chat-row.right { align-self: flex-end; flex-direction: row-reverse; }
-        
-        .profile-img { width: 42px; height: 42px; border-radius: 16px; flex-shrink: 0; background-color: #cbd5e1; background-size: cover; background-position: center; background-repeat: no-repeat; }
-        .chat-content { display: flex; flex-direction: column; gap: 0; }
-        
-        .chat-name { font-size: 12.5px; font-weight: 600; color: var(--kt-text-bg); opacity: 0.8; transition: color 0.3s; margin-bottom: 6px; padding-left: 2px; }
-        
-        .bubble { padding: 9px 14px; border-radius: 16px; font-size: 14.5px; font-weight: 500; line-height: 1.45; word-break: break-all; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .chat-row.left .bubble { background: var(--kt-bubble-l); color: var(--kt-text-l); border-top-left-radius: 4px; }
-        .chat-row.right .bubble { background: var(--kt-bubble-r); color: var(--kt-text-r); border-top-right-radius: 4px; }
-        
-        .katalk-input { background: var(--kt-input-bg); padding: 14px 20px; display: flex; align-items: center; gap: 14px; position: absolute; bottom: 0; width: 100%; border-top: 1px solid rgba(0,0,0,0.05); transition: background 0.3s; }
-        .katalk-input div { flex: 1; height: 42px; background: var(--kt-input-box); border-radius: 21px; transition: background 0.3s; }
-        .katalk-input span { color: var(--kt-input-icon); transition: color 0.3s; }
-
-        /* 4. 갤러리 */
-        #mode-gallery { padding: 0; }
-        .gallery-header { padding: 22px 24px 15px 24px; font-size: 26px; font-weight: 800; color: #000; border-bottom: 1px solid #f2f2f2; letter-spacing: -0.5px; }
-        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; overflow-y: hidden; }
-        .gallery-item { aspect-ratio: 1; background-color: #f1f5f9; background-size: cover; background-position: center; background-repeat: no-repeat; }
-
-        .dynamic-block { animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
+/* frame v2 — thin bezel, frame color visible */
+.dev{border-radius:64px;padding:5px}
+.bez{border-radius:59px;padding:5px}
+.scr{border-radius:54px;background:#000}
+.dev.notch{border-radius:60px}.dev.notch .bez{border-radius:55px}.dev.notch .scr{border-radius:50px}
+.dev.punch{border-radius:50px;padding:4px}.dev.punch .bez{border-radius:46px;padding:4px}.dev.punch .scr{border-radius:42px}
+.islandc{top:10px}
+/* gif sequence picker */
+.gseq{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.gseq button{display:flex;align-items:center;gap:6px;height:32px;padding:0 8px;white-space:nowrap;border:1px solid #e4e4e4;background:#fff;border-radius:8px;font-size:11.5px;font-weight:500;color:var(--mute)}
+.gseq button i{width:16px;height:16px;border-radius:50%;border:1px solid #d6d6d6;font-style:normal;font-size:9.5px;font-weight:700;display:grid;place-items:center;flex:none}
+.gseq button.on{border-color:var(--ink);color:var(--ink)}
+.gseq button.on i{background:var(--ink);border-color:var(--ink);color:#fff}
+.lk-notis{max-height:450px;overflow:hidden;justify-content:flex-end}
+</style>
 </head>
 <body>
-
-    <div class="controls">
-        <h2>🤍 Mobile Phone Editor</h2>
-
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('tab-lock', 'mode-lock')">위젯/잠금</button>
-            <button class="tab-btn" onclick="switchTab('tab-face', 'mode-face')">영상통화</button>
-            <button class="tab-btn" onclick="switchTab('tab-katalk', 'mode-katalk')">카카오톡</button>
-            <button class="tab-btn" onclick="switchTab('tab-gallery', 'mode-gallery')">갤러리</button>
-        </div>
-
-        <div id="tab-lock" class="tab-content active">
-            <div class="sec-title">기본 설정
-                <div class="color-palette">
-                    <div class="color-btn active" style="background:#fff;" onclick="setPhoneTheme('#fff', '#111', this)"></div>
-                    <div class="color-btn" style="background:#1c1c1e;" onclick="setPhoneTheme('#1c1c1e', '#fff', this)"></div>
-                    <div class="color-btn" style="background:#f4f0ec;" onclick="setPhoneTheme('#f4f0ec', '#111', this)"></div>
-                </div>
-            </div>
-            
-            <div class="control-block">
-                <div class="input-group" style="margin-bottom:0;">
-                    <label>배경 이미지 업로드</label>
-                    <input type="file" id="in-bg" accept="image/*">
-                    <div class="img-controls" id="ctrl-bg-box">
-                        <div class="img-ctrl-row"><span>가로</span><input type="range" id="x-bg" min="0" max="100" value="50" oninput="updateImageStyle('bg', 'out-bg')"></div>
-                        <div class="img-ctrl-row"><span>세로</span><input type="range" id="y-bg" min="0" max="100" value="50" oninput="updateImageStyle('bg', 'out-bg')"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sec-title">상단바 설정 
-                <button class="btn-action" onclick="generateStatusBar()">🎲 랜덤</button>
-            </div>
-            <div class="row">
-                <div class="input-group"><label>시간</label><input type="text" id="in-time" placeholder="예: 1234" oninput="formatTime(this, 'out-time')" maxlength="5"></div>
-                <div class="input-group"><label>배터리</label><input type="text" id="in-battery" placeholder="예: 80" oninput="formatBattery(this, 'out-battery')" maxlength="3"></div>
-                <div class="input-group">
-                    <label>네트워크</label>
-                    <select id="in-network" onchange="updateText('out-network', this.value)">
-                        <option value="📶">LTE 📶</option>
-                        <option value="5G">5G</option>
-                        <option value="🛜">Wi-Fi 🛜</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="sec-title">메인 시간/날짜 설정
-                <div class="color-palette">
-                    <div class="color-btn active" style="background:#fff;" onclick="setTimeColor('#ffffff', this)"></div>
-                    <div class="color-btn" style="background:#111;" onclick="setTimeColor('#111111', this)"></div>
-                    <button class="btn-action" style="margin-left: 10px;" onclick="generateMainDateTime()">🎲 랜덤</button>
-                </div>
-            </div>
-            <div class="row">
-                <div class="input-group"><label>시간</label><input type="text" id="in-main-time" placeholder="예: 03:45" oninput="updateText('out-main-time', this.value)"></div>
-                <div class="input-group"><label>날짜</label><input type="text" id="in-main-date" placeholder="예: 9월 26일 화요일" oninput="updateText('out-main-date', this.value)"></div>
-            </div>
-            
-            <div class="sec-title" style="margin-top: 40px;">위젯 관리</div>
-            <div id="widget-controls"></div>
-            <button class="btn-add" onclick="addWidget()">+ 위젯 추가</button>
-        </div>
-
-        <div id="tab-face" class="tab-content">
-            <div class="sec-title" style="margin-top:0;">영상통화 화면 설정</div>
-            <div class="control-block">
-                <div class="input-group">
-                    <label>상대방 사진 (전체 배경)</label>
-                    <input type="file" id="in-other-pic" accept="image/*">
-                    <div class="img-controls" id="ctrl-other-box">
-                        <div class="img-ctrl-row"><span>가로</span><input type="range" id="x-other" min="0" max="100" value="50" oninput="updateImageStyle('other', 'out-face-bg')"></div>
-                        <div class="img-ctrl-row"><span>세로</span><input type="range" id="y-other" min="0" max="100" value="50" oninput="updateImageStyle('other', 'out-face-bg')"></div>
-                    </div>
-                </div>
-                <div class="input-group">
-                    <label>상대방 이름</label>
-                    <input type="text" placeholder="이름 입력" oninput="updateText('face-name', this.value)">
-                </div>
-                <div class="input-group" style="margin-bottom:0;">
-                    <label>통화 상태 <button class="btn-action" onclick="generateCallTime()">🎲 랜덤</button></label>
-                    <input type="text" id="in-face-status" placeholder="예: 통화 중 - 02:45" oninput="updateText('face-status', this.value)">
-                </div>
-            </div>
-            
-            <div class="control-block">
-                <div class="input-group" style="margin-bottom:0;">
-                    <label>내 사진 (우측 상단 화면)</label>
-                    <input type="file" id="in-my-pic" accept="image/*">
-                    <div class="img-controls" id="ctrl-my-box">
-                        <div class="img-ctrl-row"><span>가로</span><input type="range" id="x-my" min="0" max="100" value="50" oninput="updateImageStyle('my', 'out-my-pic')"></div>
-                        <div class="img-ctrl-row"><span>세로</span><input type="range" id="y-my" min="0" max="100" value="50" oninput="updateImageStyle('my', 'out-my-pic')"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="tab-katalk" class="tab-content">
-            <div class="sec-title" style="margin-top:0;">카톡 테마 (7종)</div>
-            <div class="color-palette" style="justify-content: flex-start; margin-bottom: 20px;">
-                <div class="color-btn active" style="background:#b2c7d9;" onclick="setKatalkTheme('#b2c7d9', '#fff', '#fee500', '#111', '#111', false, this)"></div>
-                <div class="color-btn" style="background:#202124;" onclick="setKatalkTheme('#202124', '#303134', '#fdd835', '#fff', '#111', true, this)"></div>
-                <div class="color-btn" style="background:#ffdce0;" onclick="setKatalkTheme('#ffdce0', '#fff', '#ffb6c1', '#111', '#111', false, this)"></div>
-                <div class="color-btn" style="background:#a7d7c5;" onclick="setKatalkTheme('#a7d7c5', '#fff', '#68d3a6', '#111', '#111', false, this)"></div>
-                <div class="color-btn" style="background:#c5bced;" onclick="setKatalkTheme('#c5bced', '#fff', '#9d8df2', '#111', '#fff', false, this)"></div>
-                <div class="color-btn" style="background:#fceea7;" onclick="setKatalkTheme('#fceea7', '#fff', '#ffdc3b', '#111', '#111', false, this)"></div>
-                <div class="color-btn" style="background:#2c3e50;" onclick="setKatalkTheme('#2c3e50', '#ecf0f1', '#f1c40f', '#111', '#111', true, this)"></div>
-            </div>
-
-            <div class="control-block">
-                <div class="input-group">
-                    <label>상대방 프로필 사진</label>
-                    <input type="file" id="in-profile" accept="image/*">
-                    <div class="img-controls" id="ctrl-profile-box">
-                        <div class="img-ctrl-row"><span>가로</span><input type="range" id="x-profile" min="0" max="100" value="50" oninput="updateProfileStyle()"></div>
-                        <div class="img-ctrl-row"><span>세로</span><input type="range" id="y-profile" min="0" max="100" value="50" oninput="updateProfileStyle()"></div>
-                    </div>
-                </div>
-                <div class="row" style="margin-bottom:0;">
-                    <div class="input-group"><label>이름</label><input type="text" placeholder="이름 입력" oninput="updateText('katalk-name', this.value); updateAllChatNames(this.value);"></div>
-                    <div class="input-group"><label>채팅 날짜 <button class="btn-action" style="padding:4px 8px; font-size:11px;" onclick="generateKatalkDate()">🎲</button></label>
-                        <input type="text" id="in-katalk-date" placeholder="날짜 입력" oninput="updateDisplay('katalk-date', this.value)">
-                    </div>
-                </div>
-            </div>
-            
-            <div class="sec-title">말풍선 추가</div>
-            <div id="chat-controls"></div>
-            <div class="row">
-                <button class="btn-add" onclick="addChat('left')">+ 상대방 말 추가</button>
-                <button class="btn-add" onclick="addChat('right')">+ 내 말 추가</button>
-            </div>
-        </div>
-
-        <div id="tab-gallery" class="tab-content">
-            <div class="sec-title" style="margin-top:0;">갤러리 사진 추가</div>
-            <div id="gallery-controls"></div>
-            <button class="btn-add" onclick="addGalleryItem()">+ 사진 추가</button>
-        </div>
-
-        <button class="btn-capture" id="btn-capture-action" onclick="captureUltraHQ()">📸 이미지 저장</button>
+<div class="app">
+  <header class="top">
+    <div class="brand"><i></i>PHONE<b>MOCKUP</b></div>
+    <nav class="tabs" id="tabs"></nav>
+    <div class="acts">
+      <button class="btn sm ghost" data-act="copy">복사</button>
+      <button class="btn sm ghost" data-act="png">PNG</button>
+      <button class="btn sm" data-act="gif">GIF</button>
     </div>
+  </header>
+  <aside class="panel"><div class="pbody" id="pbody"></div></aside>
+  <main class="view" id="view">
+    <div class="scaler" id="scaler"><div id="preview"></div></div>
+    <div class="cap" id="dockLbl"></div>
+  </main>
+</div>
+<div id="off"></div>
+<div id="busy"><div class="bx"><div id="busyTx">렌더링 중…</div><div class="bar"><i id="busyBar"></i></div></div></div>
+<div id="toast"></div>
 
-    <div class="phone" id="capture-area">
-        <div class="dynamic-island"></div>
-        <div class="phone-bg-img" id="out-bg"></div>
-        <div class="face-bg" id="out-face-bg"></div>
-        <div class="katalk-bg" id="katalk-bg"></div>
-        <div class="gallery-bg" id="gallery-bg"></div>
-        
-        <div class="status-bar" id="status-bar">
-            <span id="out-time"></span>
-            <div class="status-icons"><span id="out-network">📶</span> <span id="out-battery"></span> 🔋</div>
-        </div>
+<script>
+/* ═════════════ Utilities ═════════════ */
+const $=s=>document.querySelector(s);
+const uid=()=>Math.random().toString(36).slice(2,9);
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pad=n=>String(n).padStart(2,'0');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const WD=['일','월','화','수','목','금','토'];
+const KEY='phone-editor-v5';
 
-        <div id="mode-lock" class="screen-mode active">
-            <div class="lock-date-time"><h1 id="out-main-time"></h1><p id="out-main-date"></p></div>
-            <div class="widget-area" id="widget-display"></div>
-        </div>
+/* ═════════════ Icons (explicit colors so captures render right) ═════════════ */
+const I={
+  chevL:(c,h=20)=>`<svg width="${h*.6}" height="${h}" viewBox="0 0 12 20"><path d="M10 2L2 10l8 8" fill="none" stroke="${c}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  search:c=>`<svg width="22" height="22" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="${c}" stroke-width="1.7"/><path d="M15.5 15.5L20.5 20.5" stroke="${c}" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  menu:c=>`<svg width="22" height="22" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" stroke="${c}" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  plus:(c,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M12 4.5v15M4.5 12h15" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+  smile:c=>`<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="${c}" stroke-width="1.8"/><circle cx="9" cy="10" r="1.2" fill="${c}"/><circle cx="15" cy="10" r="1.2" fill="${c}"/><path d="M8.5 14.3c1.8 2.1 5.2 2.1 7 0" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  hash:c=>`<svg width="22" height="22" viewBox="0 0 24 24"><path d="M9.5 4L7.5 20M16.5 4l-2 16M4.5 9h16M3.5 15h16" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  wifi:c=>`<svg width="17" height="12" viewBox="0 0 17 12"><path fill="${c}" d="M8.5 2.4c2.4 0 4.6.9 6.3 2.5l1.3-1.3C14.1 1.6 11.4.5 8.5.5S2.9 1.6.9 3.6l1.3 1.3C3.9 3.3 6.1 2.4 8.5 2.4zm0 3.7c1.4 0 2.7.5 3.7 1.4l1.3-1.3C12.2 5 10.4 4.3 8.5 4.3S4.8 5 3.5 6.2l1.3 1.3c1-.9 2.3-1.4 3.7-1.4zm0 3.6c.5 0 1 .2 1.3.5L8.5 11.6 7.2 10.2c.3-.3.8-.5 1.3-.5z"/></svg>`,
+  msg:(c,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7L5.7 21l3.9-2.5c.8.1 1.6.2 2.4.2 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>`,
+  phone:(c,s=22,rot=0)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><g transform="rotate(${rot} 12 12)"><path fill="${c}" d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></g></svg>`,
+  mic:(c,s=26)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M12 14c1.7 0 3-1.3 3-3V5c0-1.7-1.3-3-3-3S9 3.3 9 5v6c0 1.7 1.3 3 3 3zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7h-1.7z"/></svg>`,
+  video:(c,s=26)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M17 10.5V7c0-.6-.4-1-1-1H4c-.6 0-1 .4-1 1v10c0 .6.4 1 1 1h12c.6 0 1-.4 1-1v-3.5l4 4v-11l-4 4z"/></svg>`,
+  speaker:(c,s=26)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.8-1-3.3-2.5-4v8c1.5-.7 2.5-2.2 2.5-4zM14 3.2v2.1c2.9.9 5 3.5 5 6.7s-2.1 5.8-5 6.7v2.1c4-.9 7-4.5 7-8.8s-3-7.9-7-8.8z"/></svg>`,
+  cam:(c,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><circle cx="12" cy="12.5" r="3.2" fill="${c}"/><path fill="${c}" d="M9 3L7.2 5H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2h-3.2L15 3H9zm3 14.5c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/></svg>`,
+  flash:(c,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M7 2h10v3H7zm0 5v1l2 3v11h6V11l2-3V7H7zm5 8.5c-.8 0-1.5-.7-1.5-1.5s.7-1.5 1.5-1.5 1.5.7 1.5 1.5-.7 1.5-1.5 1.5z"/></svg>`,
+  alarm:(c,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M22 5.7l-4.6-3.9-1.3 1.5 4.6 3.9L22 5.7zM7.9 3.4L6.6 1.9 2 5.7l1.3 1.5 4.6-3.8zM12.5 8H11v6l4.8 2.9.7-1.2-4-2.4V8zM12 4c-5 0-9 4-9 9s4 9 9 9 9-4 9-9-4-9-9-9zm0 16c-3.9 0-7-3.1-7-7s3.1-7 7-7 7 3.1 7 7-3.1 7-7 7z"/></svg>`,
+  person:(c='#fff')=>`<svg width="34" height="34" viewBox="0 0 40 40"><circle cx="20" cy="15" r="7.5" fill="${c}"/><path d="M5 40c1.5-9.5 7.5-14 15-14s13.5 4.5 15 14z" fill="${c}"/></svg>`,
+};
+/* editor-only icons */
+const UI={
+  lock:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  chat:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 4C7 4 3 7.2 3 11.2c0 2.5 1.6 4.7 4 6l-.8 3 3.5-2c.8.2 1.5.2 2.3.2 5 0 9-3.2 9-7.2S17 4 12 4z"/></svg>',
+  sms:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  face:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2.5"/><path d="M16 10.5l5-3v9l-5-3"/></svg>',
+  call:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A17 17 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/></svg>',
+  gallery:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4.5 4"/></svg>',
+};
 
-        <div id="mode-face" class="screen-mode">
-            <div class="face-top"><h2 id="face-name"></h2><p id="face-status"></p></div>
-            <div class="face-pip" id="out-my-pic"></div>
-            <div class="face-bottom"><div class="f-btn">🎙️</div><div class="f-btn red">📞</div><div class="f-btn">📹</div></div>
-        </div>
+/* ═════════════ Data tables ═════════════ */
+const SCREENS=[['lock','잠금화면'],['chat','카카오톡'],['sms','메시지'],['face','영상통화'],['call','전화 수신'],['gallery','갤러리']];
+const WALLS=[
+  ['linear-gradient(170deg,#4a4a50 0%,#1c1c1f 100%)','그라파이트'],
+  ['linear-gradient(170deg,#f1f1f4 0%,#d3d4da 100%)','라이트 그레이',1],
+  ['#ffffff','화이트',1],['#1c1c1e','블랙'],['#f3efea','베이지',1],
+  ['linear-gradient(170deg,#3b4a6b 0%,#1a2033 100%)','네이비'],
+  ['linear-gradient(170deg,#c9d6df 0%,#8fa3b3 100%)','블루 그레이',1],
+  ['linear-gradient(170deg,#d8dccf 0%,#9ea893 100%)','세이지',1],
+  ['linear-gradient(170deg,#e9ddd3 0%,#c2a998 100%)','샌드',1],
+];
+const FRAMES={
+  black:{n:'블랙',band:'linear-gradient(145deg,#55555a,#1c1c1e 40%,#2e2e31)',btn:'#2b2b2e'},
+  titanium:{n:'내추럴',band:'linear-gradient(145deg,#d8d0c4,#8f887d 45%,#b7afa3)',btn:'#8a847a'},
+  silver:{n:'실버',band:'linear-gradient(145deg,#f7f7f8,#c6c7cb 45%,#e8e8ea)',btn:'#b9babe'},
+  blue:{n:'블루',band:'linear-gradient(145deg,#74849f,#2e3b52 45%,#4c5a75)',btn:'#34425a'},
+  pink:{n:'핑크',band:'linear-gradient(145deg,#fde8ec,#e6b5bf 45%,#f6d6dc)',btn:'#d9a6b1'},
+  white:{n:'화이트',band:'linear-gradient(145deg,#ffffff,#e2e2e6 45%,#f6f6f7)',btn:'#d0d0d5'},
+};
+const KT=[
+  {n:'기본',bg:'#b2c7d9',l:'#ffffff',r:'#fee500',tl:'#111',tr:'#111',dark:false},
+  {n:'다크',bg:'#1f2023',l:'#303134',r:'#fdd835',tl:'#fff',tr:'#111',dark:true},
+  {n:'핑크',bg:'#ffdce0',l:'#ffffff',r:'#ffb6c1',tl:'#111',tr:'#111',dark:false},
+  {n:'민트',bg:'#a7d7c5',l:'#ffffff',r:'#68d3a6',tl:'#111',tr:'#111',dark:false},
+  {n:'라벤더',bg:'#c5bced',l:'#ffffff',r:'#9d8df2',tl:'#111',tr:'#fff',dark:false},
+  {n:'레몬',bg:'#fceea7',l:'#ffffff',r:'#ffdc3b',tl:'#111',tr:'#111',dark:false},
+  {n:'네이비',bg:'#2c3e50',l:'#ecf0f1',r:'#f1c40f',tl:'#111',tr:'#111',dark:true},
+];
+const APPS={
+  kakao:{n:'카카오톡',bg:'#fee500',ic:()=>I.msg('#3a1d1d',22)},
+  sms:{n:'메시지',bg:'linear-gradient(#63f37b,#20c73f)',ic:()=>I.msg('#fff',22)},
+  call:{n:'부재중 전화',bg:'linear-gradient(#63f37b,#20c73f)',ic:()=>I.phone('#fff',21)},
+  insta:{n:'Instagram',bg:'linear-gradient(45deg,#f9ce34,#ee2a7b 55%,#6228d7)',ic:()=>I.cam('#fff',21)},
+  alarm:{n:'알람',bg:'#ff9f0a',ic:()=>I.alarm('#fff',22)},
+  music:{n:'음악',bg:'linear-gradient(#fb5c74,#fa233b)',ic:()=>'♪'},
+  fortune:{n:'오늘의 운세',bg:'linear-gradient(#a78bfa,#6d28d9)',ic:()=>'★'},
+  warning:{n:'시스템 경고',bg:'#ff3b30',ic:()=>'!'},
+  hot:{n:'실시간 인기글',bg:'linear-gradient(#fdba74,#f97316)',ic:()=>'🔥'},
+};
 
-        <div id="mode-katalk" class="screen-mode">
-            <div class="katalk-header"><span>&lt;</span> <span id="katalk-name"></span></div>
-            <div class="chat-area">
-                <div class="chat-date" id="katalk-date"></div>
-                <div id="chat-display" style="display:flex;flex-direction:column;gap:16px;"></div>
-            </div>
-            <div class="katalk-input"><span>+</span><div></div><span>#</span></div>
-        </div>
+/* ═════════════ State ═════════════ */
+function nowParts(){const d=new Date();const h=d.getHours();return{d,h,m:d.getMinutes(),h12:(h%12)||12,ap:h<12?'오전':'오후'};}
+function defaults(){
+  const t=nowParts(), d=t.d;
+  const kt=`${t.ap} ${t.h12}:${pad(t.m)}`;
+  return {
+    screen:'lock',
+    device:{model:'island',frame:'black',bezel:true,statusColor:'auto',homeBar:true},
+    status:{show:true,time:`${t.h12}:${pad(t.m)}`,battery:82,signal:4,net:'5G',showPct:false,charging:false},
+    lock:{wall:null,preset:0,dim:0,date:`${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`,time:`${t.h12}:${pad(t.m)}`,timeColor:'auto',weight:600,buttons:true,notiStyle:'glass',
+      notis:[{id:uid(),app:'sms',title:'이름',body:'알림 내용',time:'지금'},{id:uid(),app:'alarm',title:'알람',body:'알림 내용',time:'지금'}]},
+    chat:{theme:0,name:'이름',profile:null,bgImg:null,date:`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`,unread:0,typing:false,
+      messages:[
+        {id:uid(),side:'left',text:'메시지 내용',time:kt,unread:false,img:null},
+        {id:uid(),side:'left',text:'메시지 내용',time:kt,unread:false,img:null},
+        {id:uid(),side:'right',text:'메시지 내용',time:kt,unread:false,img:null},
+        {id:uid(),side:'right',text:'메시지 내용',time:kt,unread:false,img:null},
+        {id:uid(),side:'left',text:'메시지 내용',time:kt,unread:false,img:null},
+      ]},
+    sms:{service:'imessage',dateLine:`오늘 ${kt}`,read:'읽음'},
+    face:{other:null,me:null,name:'이름',status:'00:00',pip:true},
+    call:{name:'이름',sub:'휴대전화',photo:null},
+    gallery:{title:'최근 항목',cols:3,items:[]},
+    exp:{scale:3,bg:'#ffffff',shadow:true,gifScale:1.5,gifDelay:800,gifBg:'#ffffff',typing:true,gifMode:'single',gifScreens:['lock','chat','sms'],gifAnim:true},
+  };
+}
+function merge(base,src){
+  if(!src||typeof src!=='object'||Array.isArray(src))return base;
+  for(const k of Object.keys(base)){
+    const b=base[k],s=src[k];
+    if(s===undefined)continue;
+    if(b&&typeof b==='object'&&!Array.isArray(b)&&s&&typeof s==='object'&&!Array.isArray(s))base[k]=merge(b,s);
+    else base[k]=s;
+  }
+  return base;
+}
+let S=defaults();
+try{const raw=localStorage.getItem(KEY);if(raw)S=merge(defaults(),JSON.parse(raw));}catch(e){}
+const ui={tab:'screen',gsel:-1};
 
-        <div id="mode-gallery" class="screen-mode">
-            <div class="gallery-header">Gallery</div> 
-            <div class="gallery-grid" id="out-gallery-grid"></div>
-        </div>
-    </div>
+const g=p=>p.split('.').reduce((o,k)=>o==null?o:o[k],S);
+function sp(p,v){const ks=p.split('.');let o=S;for(let i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks[ks.length-1]]=v;}
 
-    <script>
-        const imageStates = {
-            bg: { url: '', pos: '50% 50%' },
-            other: { url: '', pos: '50% 50%' },
-            my: { url: '', pos: '50% 50%' },
-            profile: { url: '', pos: '50% 50%' }
-        };
+/* ═════════════ Phone rendering ═════════════ */
+function bgImg(im,extra=''){
+  if(!im||!im.url)return'';
+  return `<div class="imgbox" ${extra}><div style="background-image:url('${im.url}');background-position:${im.x}% ${im.y}%;transform:scale(${(im.z||100)/100});transform-origin:${im.x}% ${im.y}%"></div></div>`;
+}
+const isDarkColor=c=>{const h=c.replace('#','');const f=h.length===3?h.split('').map(x=>x+x).join(''):h;const r=parseInt(f.substr(0,2),16),gg=parseInt(f.substr(2,2),16),b=parseInt(f.substr(4,2),16);return (r*299+gg*587+b*114)/1000<140;};
+function lockTimeColor(s){
+  const c=s.lock.timeColor;
+  if(c!=='auto')return c;
+  return (!s.lock.wall&&WALLS[s.lock.preset]?.[2])?'#111111':'#ffffff';
+}
+function statusColor(s){
+  const d=s.device.statusColor;
+  if(d!=='auto')return d;
+  switch(s.screen){
+    case'lock':return isDarkColor(lockTimeColor(s))?'#000':'#fff';
+    case'chat':return KT[s.chat.theme].dark?'#fff':'#000';
+    case'face':case'call':return'#fff';
+    default:return'#000';
+  }
+}
+function homeColor(s){
+  switch(s.screen){
+    case'chat':return KT[s.chat.theme].dark?'rgba(255,255,255,.85)':'#111';
+    case'sms':case'gallery':return'#111';
+    case'lock':return statusColor(s)==='#fff'?'rgba(255,255,255,.9)':'#111';
+    default:return'rgba(255,255,255,.9)';
+  }
+}
+function statusHTML(s,c){
+  const st=s.status,m=s.device.model;
+  const dim=c==='#fff'?'rgba(255,255,255,.42)':'rgba(0,0,0,.32)';
+  if(!st.show)return`<div class="sb ${m}"></div>`;
+  const bars=[4,6,8.5,11].map((h,i)=>`<i style="height:${h}px;background:${i<st.signal?c:dim}"></i>`).join('');
+  const net=st.net==='wifi'?I.wifi(c):`<span class="net">${esc(st.net)}</span>`;
+  const pct=Math.max(0,Math.min(100,+st.battery||0));
+  const fill=st.charging?'#34c759':(pct<=20?'#ff3b30':c);
+  return `<div class="sb ${m}" style="color:${c}"><div class="sb-l">${esc(st.time)}</div><div class="sb-r"><div class="bars">${bars}</div>${net}${st.showPct?`<span class="pct">${pct}%</span>`:''}<div class="batw"><div class="bat" style="border-color:${dim}"><i style="width:${Math.max(8,pct)}%;background:${fill}"></i></div><div class="nub" style="background:${dim}"></div></div></div></div>`;
+}
+const hasUnread=v=>v!=null&&String(v).trim()!==''&&String(v).trim()!=='0';
+const visibleMsg=m=>(m.text&&m.text.trim())||(m.img&&m.img.url);
 
-        function updateText(id, value) { document.getElementById(id).innerText = value; }
-        function updateDisplay(id, value) {
-            const el = document.getElementById(id);
-            el.innerText = value;
-            el.style.display = value ? 'inline-block' : 'none';
-        }
+function screenLock(s){
+  const L=s.lock, tc=lockTimeColor(s);
+  const bg=`<div class="bgl" style="background:${WALLS[L.preset]?.[0]||WALLS[0][0]}">${bgImg(L.wall)}${L.dim?`<div class="bgl" style="background:rgba(0,0,0,${L.dim/100})"></div>`:''}</div>`;
+  const nst=(L.notiStyle==='glass'&&isDarkColor(tc))?'light':L.notiStyle;const lb=isDarkColor(tc)?'rgba(0,0,0,.07)':'rgba(255,255,255,.16)',li=isDarkColor(tc)?'#111':'#fff';
+  const notis=L.notis.map(n=>{const a=APPS[n.app]||APPS.kakao;return`<div class="nt ${nst}"><div class="nt-ic" style="background:${a.bg}">${a.ic()}</div><div class="nt-tx"><div class="nt-h"><b>${esc(n.title||a.n)}</b><span>${esc(n.time)}</span></div>${n.body?`<div class="nt-b">${esc(n.body)}</div>`:''}</div></div>`;}).join('');
+  const body=`<div class="lk"><div class="lk-date" style="color:${tc}">${esc(L.date)}</div><div class="lk-time" style="color:${tc};font-weight:${L.weight}">${esc(L.time)}</div><div class="lk-notis">${notis}</div></div>
+   ${L.buttons?`<div class="lk-btn" style="right:44px;background:${lb}">${I.cam(li,20)}</div>`:''}`;
+  return{bg,body};
+}
+function ktRows(s,th){
+  const ms=s.chat.messages.filter(visibleMsg);
+  const name=esc(s.chat.name);
+  const pf=s.chat.profile?.url?bgImg(s.chat.profile):I.person('#e8eef4');
+  const rows=[];
+  const item=(m,i,list,typing)=>{
+    const prev=list[i-1],next=list[i+1];
+    const first=!prev||prev.side!==m.side;
+    const lastT=!next||next.side!==m.side||next.time!==m.time;
+    const L=m.side==='left';
+    const bc=L?th.l:th.r, tc=L?th.tl:th.tr;
+    let bub;
+    if(typing)bub=`<div class="kt-b ${first?'tail':''}" style="background:${bc}"><div class="dots">${('<i style="background:'+(th.dark&&L?'#aaa':'#9a9aa2')+'"></i>').repeat(3)}</div></div>`;
+    else if(m.img?.url){const h=Math.min(260,Math.round(190/(m.img.ar||1)));bub=`<div class="kt-img" style="height:${h}px">${bgImg(m.img)}</div>`;}
+    else bub=`<div class="kt-b ${first?'tail':''}" style="background:${bc};color:${tc}">${esc(m.text)}</div>`;
+    const meta=typing?'':`<div class="kt-meta ${L?'':'r'}" style="color:${th.dark?'#e5e5e5':'#333'}">${!L&&m.unread?'<i>1</i>':''}${lastT&&m.time?`<span>${esc(m.time)}</span>`:''}</div>`;
+    if(L)return`<div class="kt-row l ${first?'first':''}">${first?`<div class="kt-pf">${pf}</div>`:'<div class="kt-pf kph"></div>'}<div>${first?`<div class="kt-n" style="color:${th.dark?'#ddd':'#222'}">${name}</div>`:''}<div class="kt-line">${bub}${meta}</div></div></div>`;
+    return`<div class="kt-row r ${first?'first':''}"><div class="kt-line">${meta}${bub}</div></div>`;
+  };
+  const list=ms.slice();
+  if(s._typing||s.chat.typing)list.push({side:'left',_t:1,time:''});
+  list.forEach((m,i)=>rows.push(item(m,i,list,m._t)));
+  return rows.join('');
+}
+function screenChat(s){
+  const C=s.chat, th=KT[C.theme]||KT[0], hc=th.dark?'#fff':'#111';
+  const bg=`<div class="bgl" style="background:${th.bg}">${bgImg(C.bgImg)}</div>`;
+  const ib=th.dark?'#1c1c1e':'#ffffff', fb=th.dark?'#2c2c2e':'#f2f2f4', icn=th.dark?'#8e8e93':'#8e8e93';
+  const body=`<div class="kt-head" style="color:${hc}"><div class="kt-back">${I.chevL(hc,19)}${hasUnread(C.unread)?`<span>${esc(C.unread)}</span>`:''}</div><div class="kt-name">${esc(C.name)}</div><div class="kt-icons">${I.search(hc)}${I.menu(hc)}</div></div>
+  <div class="list"><div class="inner kt-inner">${C.date?`<div class="kt-dw"><span class="kt-date" style="background:${th.dark?'rgba(255,255,255,.12)':'rgba(0,0,0,.13)'};color:#fff">${esc(C.date)}</span></div>`:''}${ktRows(s,th)}</div></div>
+  <div class="kt-in" style="background:${ib}">${I.plus(icn,22)}<div class="f" style="background:${fb}"></div>${I.smile(icn)}${I.hash(icn)}</div>`;
+  return{bg,body};
+}
+function screenSms(s){
+  const C=s.chat, M=s.sms, blue=M.service==='sms'?'#34c759':'#0a84ff';
+  const ms=s.chat.messages.filter(visibleMsg).slice();
+  if(s._typing||C.typing)ms.push({side:'left',_t:1});
+  let lastRight=-1;ms.forEach((m,i)=>{if(m.side==='right'&&!m._t)lastRight=i;});
+  const rows=ms.map((m,i)=>{
+    const prev=ms[i-1],next=ms[i+1];
+    const first=!prev||prev.side!==m.side, last=!next||next.side!==m.side;
+    const L=m.side==='left';
+    let bub;
+    if(m._t)bub=`<div class="im-b"><div class="dots">${'<i style="background:#8e8e93"></i>'.repeat(3)}</div></div>`;
+    else if(m.img?.url){const h=Math.min(280,Math.round(200/(m.img.ar||1)));bub=`<div class="im-img" style="height:${h}px">${bgImg(m.img)}</div>`;}
+    else bub=`<div class="im-b" ${L?'':`style="background:${blue};color:#fff"`}>${esc(m.text)}</div>`;
+    return`<div class="im-row ${L?'l':'r'} ${first?'first':''} ${last?'last':''}">${bub}</div>${i===lastRight&&M.read?`<div class="im-read">${esc(M.read)}</div>`:''}`;
+  }).join('');
+  const av=C.profile?.url?bgImg(C.profile):esc((C.name||'?').trim().charAt(0));
+  const label=M.service==='sms'?'문자 메시지':'iMessage';
+  const bg=`<div class="bgl" style="background:#fff"></div>`;
+  const body=`<div class="im-head"><div class="im-back">${I.chevL('#0a84ff',19)}${hasUnread(C.unread)?`<span>${esc(C.unread)}</span>`:''}</div><div class="im-who"><div class="im-av">${av}</div><div class="im-nm">${esc(C.name)} ›</div></div><div class="im-vid">${I.video('#0a84ff',26)}</div></div>
+  <div class="list"><div class="inner im-inner"><div class="im-date"><b>${label}</b><br>${esc(M.dateLine)}</div>${rows}</div></div>
+  <div class="im-in"><div class="im-plus">${I.plus('#8e8e93',18)}</div><div class="im-field"><span>${label}</span>${I.mic('#b0b0b5',20)}</div></div>`;
+  return{bg,body};
+}
+function screenFace(s){
+  const F=s.face;
+  const bg=`<div class="bgl" style="background:linear-gradient(175deg,#4a4d55,#1b1c20)">${F.other?.url?bgImg(F.other):`<div style="position:absolute;left:0;right:0;top:330px;display:flex;justify-content:center;transform:scale(3.2)">${I.person('rgba(255,255,255,.14)')}</div>`}</div>`;
+  const body=`<div class="fc-shade"></div><div class="fc-top"><h2>${esc(F.name)}</h2><p>${esc(F.status)}</p></div>
+  ${F.pip?`<div class="fc-pip">${F.me?.url?bgImg(F.me):`<div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center">${I.person('rgba(255,255,255,.35)')}</div>`}</div>`:''}
+  <div class="fc-bar"><div class="fc-btn">${I.speaker('#fff')}</div><div class="fc-btn">${I.video('#fff')}</div><div class="fc-btn">${I.mic('#fff')}</div><div class="fc-btn red">${I.phone('#fff',28,135)}</div></div>`;
+  return{bg,body};
+}
+function screenCall(s){
+  const C=s.call, p=s._pulse||0;
+  const bg=`<div class="bgl" style="background:linear-gradient(175deg,#3c3f46,#1a1b1f 60%,#0f0f11)">${C.photo?.url?bgImg(C.photo)+'<div class="bgl" style="background:rgba(0,0,0,.38)"></div>':''}</div>`;
+  const ring=p?`box-shadow:0 0 0 ${p*7}px rgba(52,199,89,${(0.42-p*0.1).toFixed(2)})`:'';
+  const body=`<div class="cl"><div class="cl-sub">${esc(C.sub)}</div><div class="cl-name">${esc(C.name)}</div></div>
+  <div class="cl-bot"><div class="cl-row" style="margin-bottom:46px"><div class="cl-it"><div class="c s">${I.alarm('#fff',22)}</div>리마인더</div><div class="cl-it"><div class="c s">${I.msg('#fff',22)}</div>메시지</div></div>
+  <div class="cl-row"><div class="cl-it"><div class="c b" style="background:#ff3b30">${I.phone('#fff',34,135)}</div>거절</div><div class="cl-it"><div class="c b" style="background:#34c759;${ring}">${I.phone('#fff',34)}</div>수락</div></div></div>`;
+  return{bg,body};
+}
+function screenGallery(s){
+  const G=s.gallery, n=G.items.length, cols=G.cols;
+  const tiles=n?G.items.map(it=>`<div class="gl-t">${bgImg(it.img)}</div>`).join(''):Array.from({length:cols*4},(_,i)=>`<div class="gl-t" style="background:${i%3?'#ececef':'#e4e4e8'}"></div>`).join('');
+  const bg=`<div class="bgl" style="background:#fff"></div>`;
+  const GI=[c=>`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.7"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>`,
+    c=>`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.7" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.3 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></svg>`,
+    c=>`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.7"><rect x="4" y="7" width="16" height="13" rx="2"/><path d="M6.5 4h11"/></svg>`,
+    c=>`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.7" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5"/></svg>`];
+  const tab=[['보관함',1],['For You',0],['앨범',0],['검색',0]].map(([t,on],i)=>`<div class="${on?'on':''}">${GI[i](on?'#111':'#a1a1a6')}${t}</div>`).join('');
+  const body=`<div class="gl-head"><h3>${esc(G.title)}</h3><span class="gl-sel">선택</span></div><div class="gl-sub">사진 ${n}장</div>
+  <div class="gl-grid" style="grid-template-columns:repeat(${cols},1fr)">${tiles}</div><div class="gl-tab">${tab}</div>`;
+  return{bg,body};
+}
+const SCREEN_FN={lock:screenLock,chat:screenChat,sms:screenSms,face:screenFace,call:screenCall,gallery:screenGallery};
 
-        // 시간 포맷 (4자리 숫자 제한 및 콜론 추가 로직 수정)
-        function formatTime(input, targetId) {
-            let val = input.value.replace(/\D/g, ''); 
-            // 4글자를 넘어가면 자름
-            if (val.length > 4) val = val.substring(0, 4);
-            
-            let formatted = val;
-            if (val.length >= 3) {
-                formatted = val.substring(0, 2) + ':' + val.substring(2, 4);
-            }
-            input.value = formatted;
-            updateText(targetId, formatted);
-        }
+function stageHTML(s,opt={}){
+  const d=s.device, sc=statusColor(s);
+  const {bg,body}=SCREEN_FN[s.screen](s);
+  const home=d.homeBar?`<div class="home" style="background:${homeColor(s)}"></div>`:'';
+  const inner=`${bg}<div class="lay">${statusHTML(s,sc)}${body}</div>${home}`;
+  if(!d.bezel)return`<div class="stage flat"><div class="scr" style="border-radius:0">${inner}</div></div>`;
+  const F=FRAMES[d.frame]||FRAMES.black, m=d.model;
+  const cut=m==='island'?'<div class="islandc"></div>':m==='notch'?'<div class="notchc"></div>':'<div class="punchc"></div>';
+  const btns=m==='punch'
+    ?[['right',170,96],['right',300,58]]
+    :[['left',150,30],['left',206,58],['left',274,58],['right',230,92]];
+  const b=btns.map(([side,top,h])=>`<div class="sbtn" style="${side}:-3px;top:${top}px;height:${h}px;background:${F.btn}"></div>`).join('');
+  const noSh=opt.exp&&!s.exp.shadow;
+  return`<div class="stage ${noSh?'nosh':''}"><div class="dev ${m}" style="background:${F.band}">${b}<div class="bez"><div class="scr">${inner}${cut}</div></div></div></div>`;
+}
 
-        function formatBattery(input, targetId) {
-            let val = input.value.replace(/\D/g, '');
-            input.value = val;
-            updateText(targetId, val ? val + '%' : '');
-        }
+let raf=0;
+function renderPreview(){
+  $('#preview').innerHTML=stageHTML(S);
+  $('#dockLbl').textContent=SCREENS.find(x=>x[0]===S.screen)[1]+'  ·  '+({island:'DYNAMIC ISLAND',notch:'NOTCH',punch:'PUNCH HOLE'})[S.device.model];
+  fit();
+}
+function fit(){
+  const v=$('#view'), p=$('#preview').firstElementChild;if(!p)return;
+  const w=p.offsetWidth,h=p.offsetHeight;
+  const sc=Math.max(.1,Math.min(1,(v.clientWidth-24)/w,(v.clientHeight-80)/h));
+  $('#scaler').style.transform=`translate(-50%,-50%) translateY(-24px) scale(${sc})`;
+}
+function schedule(){if(raf)return;raf=requestAnimationFrame(()=>{raf=0;renderPreview();});}
+let saveT=0,warned=false;
+function commit(){schedule();clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){if(!warned){warned=true;toast('사진 용량이 커서 자동 저장은 건너뛰었어요 (프로젝트 저장은 가능)');}}},500);}
+window.addEventListener('resize',fit);
 
-        function generateStatusBar() {
-            const h = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-            const m = String(Math.floor(Math.random() * 60)).padStart(2, '0');
-            const bat = String(Math.floor(Math.random() * 100) + 1);
-            const timeInput = document.getElementById('in-time');
-            timeInput.value = h + m;
-            formatTime(timeInput, 'out-time'); // 강제 포맷팅 호출
-            const batInput = document.getElementById('in-battery');
-            batInput.value = bat;
-            formatBattery(batInput, 'out-battery');
-        }
+/* ═════════════ Editor builders ═════════════ */
+const card=(t,body,extra='')=>`<section class="card"><div class="ct"><span>${t}</span>${extra}</div>${body}</section>`;
+const fld=(l,inner)=>`<div class="fld"><span class="lb">${l}</span>${inner}</div>`;
+const txt=(p,ph='',ex='')=>`<input class="in" data-bind="${p}" value="${esc(g(p))}" placeholder="${esc(ph)}" ${ex}>`;
+const area=(p,ph='')=>`<textarea class="in ta" rows="2" data-bind="${p}" placeholder="${esc(ph)}">${esc(g(p))}</textarea>`;
+const sel=(p,opts)=>`<select class="in" data-bind="${p}">${opts.map(([v,l])=>`<option value="${v}" ${g(p)==v?'selected':''}>${l}</option>`).join('')}</select>`;
+const seg=(p,opts,cls='')=>`<div class="seg ${cls}">${opts.map(([v,l])=>`<button type="button" class="${g(p)==v?'on':''}" data-act="set" data-path="${p}" data-val="${v}" ${typeof v==='number'?'data-num':''}>${l}</button>`).join('')}</div>`;
+const tog=(p,l)=>`<label class="tog"><span>${l}</span><input type="checkbox" data-bind="${p}" ${g(p)?'checked':''}><i></i></label>`;
+const rng=(p,min,max,step,l,unit='')=>`<div class="rg"><span>${l}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${g(p)}" data-bind="${p}" data-unit="${unit}"><b>${g(p)}${unit}</b></div>`;
+const sws=(p,list)=>`<div class="sws">${list.map(([v,css,t])=>`<button type="button" class="sw ${g(p)==v?'on':''}" style="background:${css}" title="${t}" data-act="set" data-path="${p}" data-val="${v}" ${typeof v==='number'?'data-num':''}></button>`).join('')}</div>`;
+const randBtn=k=>`<button class="mini" data-act="rand" data-val="${k}">↻ 랜덤</button>`;
+const mv=(p,i,n)=>`<div class="ibs"><button class="ib" data-act="move" data-path="${p}" data-i="${i}" data-d="-1" ${i===0?'disabled style="opacity:.35"':''} title="위로">↑</button><button class="ib" data-act="move" data-path="${p}" data-i="${i}" data-d="1" ${i===n-1?'disabled style="opacity:.35"':''} title="아래로">↓</button><button class="ib x" data-act="del" data-path="${p}" data-i="${i}" title="삭제">✕</button></div>`;
+function imgField(p,label,adj=true){
+  const im=g(p), has=im&&im.url;
+  return`<div class="imgf"><div class="imgf-top"><div class="th" style="${has?`background-image:url('${im.url}')`:''}">${has?'':'+'}</div><div class="imgf-tx"><b>${label}</b><span>${has?'적용됨 · 위치 조절 가능':'JPG · PNG · WEBP'}</span></div>
+  <label class="btn sm ghost upl">${has?'변경':'업로드'}<input type="file" accept="image/*" data-img="${p}"></label>${has?`<button class="ib x" data-act="clearImg" data-path="${p}" title="삭제">✕</button>`:''}</div>
+  ${has&&adj?`<div class="imgf-adj">${rng(p+'.x',0,100,1,'가로','%')}${rng(p+'.y',0,100,1,'세로','%')}${rng(p+'.z',100,300,1,'확대','%')}</div>`:''}</div>`;
+}
+const imgMini=p=>{const im=g(p);return im&&im.url
+  ?`<div class="row"><div class="th" style="width:32px;height:32px;border-radius:8px;background-image:url('${im.url}')"></div><button class="mini" data-act="clearImg" data-path="${p}">사진 빼기</button></div>`
+  :`<label class="mini upl" style="display:inline-flex;align-items:center">＋ 사진 메시지<input type="file" accept="image/*" data-img="${p}"></label>`;};
 
-        function generateMainDateTime() {
-            const h = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-            const m = String(Math.floor(Math.random() * 60)).padStart(2, '0');
-            const dateStr = `${Math.floor(Math.random() * 12) + 1}월 ${Math.floor(Math.random() * 28) + 1}일 ${['일', '월', '화', '수', '목', '금', '토'][Math.floor(Math.random() * 7)]}요일`;
-            document.getElementById('in-main-time').value = h + ':' + m;
-            document.getElementById('in-main-date').value = dateStr;
-            updateText('out-main-time', h + ':' + m);
-            updateText('out-main-date', dateStr);
-        }
+function E_lock(){
+  const L=S.lock;
+  return card('배경',`${fld('프리셋',sws('lock.preset',WALLS.map((w,i)=>[i,w[0],w[1]])))}
+    ${imgField('lock.wall','배경 사진')}<div class="sep"></div>${rng('lock.dim',0,70,1,'어둡게','%')}`)
+  +card('시계',`<div class="g2">${fld('시간',txt('lock.time','11:04'))}${fld('날짜',txt('lock.date','9월 24일 목요일'))}</div>
+    ${fld('글자 색',sws('lock.timeColor',[['auto','conic-gradient(#fff 0 50%,#111 0)','자동'],['#ffffff','#fff','흰색'],['#111111','#111','검정'],['#d4d4d8','#d4d4d8','라이트 그레이'],['#52525b','#52525b','다크 그레이']]))}
+    ${fld('굵기',seg('lock.weight',[[300,'얇게'],[500,'보통'],[600,'두껍게'],[800,'아주 두껍게']]))}
+    ${tog('lock.buttons','카메라 버튼')}`,randBtn('lock'))
+  +card('알림',`${fld('스타일',seg('lock.notiStyle',[['glass','투명'],['light','밝게'],['dark','어둡게']]))}
+    ${L.notis.map((n,i)=>`<div class="item"><div class="item-h"><span class="badge">알림 ${i+1}</span>${mv('lock.notis',i,L.notis.length)}</div>
+      <div class="g2">${fld('앱',sel(`lock.notis.${i}.app`,Object.entries(APPS).map(([k,a])=>[k,a.n])))}${fld('시간',txt(`lock.notis.${i}.time`,'지금'))}</div>
+      ${fld('제목',txt(`lock.notis.${i}.title`,'비우면 앱 이름'))}${fld('내용',area(`lock.notis.${i}.body`,'알림 내용'))}</div>`).join('')}
+    <button class="btn line" data-act="add" data-path="lock.notis" data-tpl="noti">＋ 알림 추가</button>`);
+}
+function E_msgs(){
+  const ms=S.chat.messages;
+  return card('메시지',`<div class="hint box">카카오톡 · 메시지 화면이 같은 대화를 사용해요. 같은 사람이 연달아 보내면 프로필이 자동으로 묶여요.</div>
+    ${ms.map((m,i)=>`<div class="item msg ${m.side}"><div class="item-h">${seg(`chat.messages.${i}.side`,[['left','상대'],['right','나']],'sm')}<input class="in sm" style="width:108px" data-bind="chat.messages.${i}.time" value="${esc(m.time)}" placeholder="시간">${mv('chat.messages',i,ms.length)}</div>
+      ${area(`chat.messages.${i}.text`,'메시지 내용')}
+      <div class="item-f">${imgMini(`chat.messages.${i}.img`)}${m.side==='right'?`<div style="width:120px">${tog(`chat.messages.${i}.unread`,'안읽음 1')}</div>`:''}</div></div>`).join('')}
+    <div class="g2"><button class="btn line" data-act="add" data-path="chat.messages" data-tpl="left">＋ 상대방</button><button class="btn line" data-act="add" data-path="chat.messages" data-tpl="right">＋ 나</button></div>
+    <div class="sep"></div>${tog('chat.typing','입력 중… 말풍선 표시')}`);
+}
+function E_chat(){
+  return card('대화방',`${fld('테마',sws('chat.theme',KT.map((t,i)=>[i,`linear-gradient(135deg,${t.bg} 55%,${t.r} 55%)`,t.n])))}
+    <div class="g2">${fld('상대 이름',txt('chat.name','이름'))}${fld('안읽은 채팅 수',txt('chat.unread','0'))}</div>
+    ${fld(`날짜 구분선 <span style="float:right">${randBtn('chatDate')}</span>`,txt('chat.date','비우면 숨김'))}
+    ${imgField('chat.profile','상대 프로필 사진')}${imgField('chat.bgImg','채팅방 배경 사진')}`)+E_msgs();
+}
+function E_sms(){
+  return card('메시지 앱',`${fld('종류',seg('sms.service',[['imessage','iMessage (파랑)'],['sms','문자 (초록)']]))}
+    <div class="g2">${fld('상대 이름',txt('chat.name','이름'))}${fld('안읽은 수',txt('chat.unread','0'))}</div>
+    <div class="g2">${fld('상단 날짜',txt('sms.dateLine','오늘 오후 12:00'))}${fld('읽음 표시',txt('sms.read','비우면 숨김'))}</div>
+    ${imgField('chat.profile','프로필 사진')}`)+E_msgs();
+}
+function E_face(){
+  return card('영상통화',`${fld('상대 이름',txt('face.name','이름'))}
+    ${fld(`통화 시간 <span style="float:right">${randBtn('face')}</span>`,txt('face.status','00:00'))}
+    ${imgField('face.other','상대방 화면 (전체)')}<div class="sep"></div>${tog('face.pip','내 화면 (작은 창) 표시')}${S.face.pip?imgField('face.me','내 화면 사진'):''}
+    <div class="hint" style="margin-top:8px">GIF로 저장하면 통화 시간이 1초씩 흘러가요.</div>`);
+}
+function E_call(){
+  return card('전화 수신',`<div class="g2">${fld('이름',txt('call.name','이름'))}${fld('보조 문구',txt('call.sub','휴대전화'))}</div>
+    ${imgField('call.photo','배경 사진')}<div class="hint" style="margin-top:8px">GIF로 저장하면 수락 버튼이 울리듯 깜빡여요.</div>`);
+}
+function E_gallery(){
+  const G=S.gallery, sel=G.items[ui.gsel];
+  return card('갤러리',`<div class="g2">${fld('제목',txt('gallery.title','최근 항목'))}${fld('열 개수',seg('gallery.cols',[[3,'3'],[4,'4'],[5,'5']]))}</div>
+    <label class="btn line upl">＋ 사진 여러 장 추가<input type="file" accept="image/*" multiple data-gallery></label>
+    ${G.items.length?`<div class="gthumbs">${G.items.map((it,i)=>`<div class="gt ${i===ui.gsel?'on':''}" style="background-image:url('${it.img.url}')" data-act="gsel" data-i="${i}"><button class="x" data-act="del" data-path="gallery.items" data-i="${i}">✕</button></div>`).join('')}</div>`:''}
+    ${sel?`<div class="imgf-adj"><div class="row" style="justify-content:space-between"><b style="font-size:12.5px">${ui.gsel+1}번 사진 위치</b>${mv('gallery.items',ui.gsel,G.items.length)}</div>${rng(`gallery.items.${ui.gsel}.img.x`,0,100,1,'가로','%')}${rng(`gallery.items.${ui.gsel}.img.y`,0,100,1,'세로','%')}${rng(`gallery.items.${ui.gsel}.img.z`,100,300,1,'확대','%')}</div>`:G.items.length?'<div class="hint" style="margin-top:8px">사진을 누르면 위치·순서를 조절할 수 있어요.</div>':''}`);
+}
+function E_device(){
+  return card('기기',`${fld('모델',seg('device.model',[['island','다이나믹 아일랜드'],['notch','노치'],['punch','펀치홀']]))}
+    ${fld('프레임 색상',sws('device.frame',Object.entries(FRAMES).map(([k,f])=>[k,f.band,f.n])))}
+    ${tog('device.bezel','기기 프레임 표시 (끄면 스크린샷처럼)')}${tog('device.homeBar','하단 홈 바')}`)
+  +card('상단바',`${tog('status.show','상단바 표시')}<div class="sep"></div>
+    <div class="g2">${fld('시간',txt('status.time','12:00','data-fmt="time" maxlength="5"'))}${fld('배터리 %',txt('status.battery','80','data-fmt="bat" maxlength="3"'))}</div>
+    ${fld('네트워크',seg('status.net',[['5G','5G'],['LTE','LTE'],['wifi','Wi‑Fi']]))}
+    ${fld('신호 세기',seg('status.signal',[[1,'1칸'],[2,'2칸'],[3,'3칸'],[4,'4칸']]))}
+    ${fld('글자 색',seg('device.statusColor',[['auto','자동'],['#fff','흰색'],['#000','검정']]))}
+    ${tog('status.showPct','배터리 % 숫자')}${tog('status.charging','충전 중')}`,randBtn('status'));
+}
+function E_export(){
+  const e=S.exp, gifDesc={lock:'알림이 하나씩 도착',chat:'메시지가 하나씩 도착',sms:'메시지가 하나씩 도착',face:'통화 시간이 1초씩 증가',call:'수락 버튼이 울림',gallery:'사진이 하나씩 추가'}[S.screen];
+  return card('이미지 (PNG)',`${fld('해상도',seg('exp.scale',[[2,'2x'],[3,'3x'],[4,'4x (최고화질)']]))}
+    ${fld('배경',seg('exp.bg',[['transparent','투명'],['#ffffff','흰색'],['#f3f3f5','회색'],['#000000','검정']]))}
+    ${tog('exp.shadow','기기 그림자')}<div class="sep"></div>
+    <div class="g2"><button class="btn ghost" data-act="copy">클립보드 복사</button><button class="btn" data-act="png">PNG 저장</button></div>`)
+  +card('움짤 (GIF)',`${fld('구성',seg('exp.gifMode',[['single','현재 화면'],['multi','여러 화면 이어서']]))}
+    ${e.gifMode==='multi'
+      ?`<div class="fld"><span class="lb">순서 — 누른 순서대로 이어져요</span><div class="gseq">${SCREENS.map(([k,l])=>{const n=e.gifScreens.indexOf(k);return`<button type="button" class="${n>=0?'on':''}" data-act="gifToggle" data-val="${k}"><i>${n>=0?n+1:''}</i>${l}</button>`;}).join('')}</div></div>
+        ${tog('exp.gifAnim','각 화면 애니메이션 포함')}<div class="sep"></div>`
+      :`<div class="hint box">지금 화면 <b>(${SCREENS.find(x=>x[0]===S.screen)[1]})</b> → ${gifDesc}</div>`}
+    ${rng('exp.gifDelay',300,2000,50,'속도','ms')}
+    ${fld('크기',seg('exp.gifScale',[[1,'1x (가벼움)'],[1.5,'1.5x'],[2,'2x (선명)']]))}
+    ${fld('배경',seg('exp.gifBg',[['#ffffff','흰색'],['#f3f3f5','회색'],['#000000','검정'],['transparent','투명']]))}
+    ${tog('exp.typing','상대 메시지 전에 "입력 중…" 넣기')}<div class="sep"></div>
+    <button class="btn full" data-act="gif">GIF 저장</button>`)
+  +card('프로젝트',`<div class="hint" style="margin-bottom:10px">작업 내용은 이 브라우저에 자동 저장돼요. 파일로 백업하거나 다른 기기로 옮길 수 있어요.</div>
+    <div class="g2"><button class="btn ghost" data-act="saveJson">파일로 저장</button><label class="btn ghost upl">불러오기<input type="file" accept=".json,application/json" data-load></label></div>
+    <button class="btn danger full" style="margin-top:8px" data-act="reset">처음부터 다시</button>`);
+}
+function renderEditor(){
+  const pb=$('.panel'), top=pb.scrollTop;
+  $('#tabs').innerHTML=[['screen','화면'],['device','기기 · 상단바'],['export','저장']].map(([k,l])=>`<button class="${ui.tab===k?'on':''}" data-act="tab" data-val="${k}">${l}</button>`).join('');
+  let h='';
+  if(ui.tab==='screen'){
+    h=`<div class="chips">${SCREENS.map(([k,l])=>`<button class="chip ${S.screen===k?'on':''}" data-act="screen" data-val="${k}">${UI[k]}${l}</button>`).join('')}</div>`
+      +({lock:E_lock,chat:E_chat,sms:E_sms,face:E_face,call:E_call,gallery:E_gallery})[S.screen]();
+  }else if(ui.tab==='device')h=E_device();
+  else h=E_export();
+  $('#pbody').innerHTML=h;pb.scrollTop=top;
+}
 
-        function generateCallTime() {
-            const result = `통화 중 - ${String(Math.floor(Math.random() * 60)).padStart(2, '0')}:${String(Math.floor(Math.random() * 60)).padStart(2, '0')}`;
-            document.getElementById('in-face-status').value = result;
-            updateText('face-status', result);
-        }
+/* ═════════════ Events ═════════════ */
+const FMT={
+  time:el=>{let v=el.value.replace(/\D/g,'').slice(0,4);if(v.length>=3)v=v.slice(0,v.length-2)+':'+v.slice(-2);el.value=v;return v;},
+  bat:el=>{let v=el.value.replace(/\D/g,'').slice(0,3);if(+v>100)v='100';el.value=v;return v===''?0:+v;},
+};
+document.addEventListener('input',e=>{
+  const el=e.target,p=el.dataset.bind;if(!p)return;
+  let v=el.type==='checkbox'?el.checked:el.type==='range'?Number(el.value):el.value;
+  if(el.dataset.fmt)v=FMT[el.dataset.fmt](el);
+  sp(p,v);
+  if(el.type==='range'&&el.nextElementSibling)el.nextElementSibling.textContent=v+(el.dataset.unit||'');
+  if(el.type==='checkbox'||el.tagName==='SELECT')renderEditor();
+  commit();
+});
+const TPL={
+  noti:()=>({id:uid(),app:'kakao',title:'',body:'',time:'지금'}),
+  left:()=>({id:uid(),side:'left',text:'',time:S.chat.messages.at(-1)?.time||'오후 12:00',unread:false,img:null}),
+  right:()=>({id:uid(),side:'right',text:'',time:S.chat.messages.at(-1)?.time||'오후 12:00',unread:false,img:null}),
+};
+function randDate(){const y=new Date().getFullYear();return new Date(y,rnd(0,11),rnd(1,28));}
+const RAND={
+  status:()=>{S.status.time=`${rnd(1,12)}:${pad(rnd(0,59))}`;S.status.battery=rnd(8,100);},
+  lock:()=>{const d=randDate();S.lock.time=`${rnd(1,12)}:${pad(rnd(0,59))}`;S.lock.date=`${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`;},
+  face:()=>{S.face.status=`${pad(rnd(0,59))}:${pad(rnd(0,59))}`;},
+  chatDate:()=>{const d=randDate();S.chat.date=`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`;},
+};
+const ACT={
+  tab:el=>{ui.tab=el.dataset.val;renderEditor();$('.panel').scrollTop=0;},
+  screen:el=>{S.screen=el.dataset.val;ui.gsel=-1;renderEditor();commit();},
+  set:el=>{sp(el.dataset.path,el.dataset.num!==undefined?Number(el.dataset.val):el.dataset.val);renderEditor();commit();},
+  add:el=>{g(el.dataset.path).push(TPL[el.dataset.tpl]());renderEditor();commit();
+    requestAnimationFrame(()=>{const items=$('#pbody').querySelectorAll('.item');const last=items[items.length-1];if(last){last.scrollIntoView({block:'center',behavior:'smooth'});last.querySelector('textarea,input.in')?.focus({preventScroll:true});}});},
+  del:el=>{const a=g(el.dataset.path);a.splice(+el.dataset.i,1);if(el.dataset.path==='gallery.items')ui.gsel=-1;renderEditor();commit();},
+  move:el=>{const a=g(el.dataset.path),i=+el.dataset.i,j=i+ +el.dataset.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];if(el.dataset.path==='gallery.items')ui.gsel=j;renderEditor();commit();},
+  clearImg:el=>{sp(el.dataset.path,null);renderEditor();commit();},
+  gifToggle:el=>{const a=S.exp.gifScreens,k=el.dataset.val,i=a.indexOf(k);if(i>=0)a.splice(i,1);else a.push(k);renderEditor();commit();},
+  gsel:el=>{ui.gsel=ui.gsel===+el.dataset.i?-1:+el.dataset.i;renderEditor();},
+  rand:el=>{RAND[el.dataset.val]();renderEditor();commit();},
+  png:()=>exportPNG(false),copy:()=>exportPNG(true),gif:()=>exportGIF(),
+  saveJson:()=>download(new Blob([JSON.stringify(S)],{type:'application/json'}),`phone-project_${stamp()}.json`),
+  reset:()=>{if(!confirm('모든 내용을 지우고 처음 상태로 돌릴까요?'))return;S=defaults();ui.gsel=-1;renderEditor();commit();toast('초기화했어요');},
+};
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');if(!el||el.disabled)return;
+  e.preventDefault();e.stopPropagation();
+  ACT[el.dataset.act]?.(el);
+});
+function loadImg(file,max=1600){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),im=new Image();
+    im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(url);
+      const png=/png|gif|webp/.test(file.type);
+      res({url:c.toDataURL(png?'image/png':'image/jpeg',.92),x:50,y:50,z:100,ar:im.width/im.height});};
+    im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('이미지를 열 수 없어요'));};
+    im.src=url;
+  });
+}
+document.addEventListener('change',async e=>{
+  const el=e.target;if(el.type!=='file'||!el.files.length)return;
+  try{
+    if(el.dataset.img!==undefined){sp(el.dataset.img,await loadImg(el.files[0]));}
+    else if(el.dataset.gallery!==undefined){for(const f of el.files)S.gallery.items.push({id:uid(),img:await loadImg(f,900)});}
+    else if(el.dataset.load!==undefined){const t=await el.files[0].text();S=merge(defaults(),JSON.parse(t));ui.gsel=-1;toast('프로젝트를 불러왔어요');}
+    renderEditor();commit();
+  }catch(err){console.error(err);toast('파일을 읽지 못했어요');}
+});
 
-        function generateKatalkDate() {
-            const result = `2024년 ${Math.floor(Math.random() * 12) + 1}월 ${Math.floor(Math.random() * 28) + 1}일 ${['일', '월', '화', '수', '목', '금', '토'][Math.floor(Math.random() * 7)]}요일`;
-            document.getElementById('in-katalk-date').value = result;
-            updateDisplay('katalk-date', result);
-        }
+/* ═════════════ Busy / toast / download ═════════════ */
+let toastT=0;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2400);}
+function busy(msg,p){$('#busy').classList.add('on');$('#busyTx').textContent=msg;$('#busyBar').style.width=Math.round((p||0)*100)+'%';}
+function busyOff(){$('#busy').classList.remove('on');}
+function stamp(){const d=new Date();return`${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+const tick=()=>new Promise(r=>setTimeout(r,0));
 
-        function setTimeColor(color, btn) {
-            document.documentElement.style.setProperty('--time-color', color);
-            btn.parentElement.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        }
+/* ═════════════ Capture ═════════════ */
+async function capture(st,scale,bg){
+  if(typeof html2canvas==='undefined')throw new Error('html2canvas not loaded');
+  try{await document.fonts.ready;}catch(e){}
+  const host=$('#off');host.innerHTML=stageHTML(st,{exp:true});
+  const el=host.firstElementChild;
+  await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  const c=await html2canvas(el,{scale,backgroundColor:bg,logging:false,useCORS:true});
+  host.innerHTML='';
+  return c;
+}
+const bgVal=v=>v==='transparent'?null:v;
+async function exportPNG(copy){
+  busy('이미지 렌더링 중…',.4);
+  try{
+    const c=await capture(S,S.exp.scale,bgVal(S.exp.bg));
+    busy('마무리 중…',.9);
+    const blob=await new Promise(r=>c.toBlob(r,'image/png'));
+    if(copy){await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('클립보드에 복사했어요');}
+    else{download(blob,`phone_${S.screen}_${stamp()}.png`);toast('PNG 저장 완료');}
+  }catch(err){console.error(err);toast(copy?'이 브라우저에선 복사가 안 돼요 — PNG 저장을 써 주세요':'저장에 실패했어요');}
+  finally{busyOff();}
+}
 
-        let currentPhoneTextColor = '#111';
-        function setPhoneTheme(bg, text, btn) {
-            document.documentElement.style.setProperty('--phone-bg', bg);
-            document.documentElement.style.setProperty('--text-main', text);
-            currentPhoneTextColor = text;
-            btn.parentElement.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            updateStatusBarColor();
-        }
+/* ═════════════ GIF frames ═════════════ */
+function buildFrames(s){
+  const D=s.exp.gifDelay,hold=Math.max(1800,D*2.2),F=[];
+  const push=(mod,delay)=>{const c=structuredClone(s);c.chat.typing=false;mod(c);F.push({s:c,delay});};
+  switch(s.screen){
+    case'lock':{const n=s.lock.notis.length;for(let k=0;k<=n;k++)push(c=>{c.lock.notis=c.lock.notis.slice(0,k);},k===n?hold:(k===0?D*1.2:D));break;}
+    case'chat':case'sms':{
+      const n=s.chat.messages.filter(visibleMsg).length;
+      const take=(c,k)=>{c.chat.messages=c.chat.messages.filter(visibleMsg).slice(0,k);};
+      push(c=>take(c,0),D);
+      const ms=s.chat.messages.filter(visibleMsg);
+      for(let k=1;k<=n;k++){
+        if(s.exp.typing&&ms[k-1].side==='left'&&(k===1||ms[k-2].side!=='left'))push(c=>{take(c,k-1);c._typing=true;},Math.max(700,D));
+        push(c=>take(c,k),k===n?hold:D);
+      }break;}
+    case'face':{
+      const m=s.face.status.match(/(\d{1,2}):(\d{2})(?!.*\d{1,2}:\d{2})/);
+      if(!m){push(()=>{},1000);break;}
+      let sec=+m[1]*60+ +m[2];
+      for(let i=0;i<10;i++){const t=sec+i,str=`${pad(Math.floor(t/60)%100)}:${pad(t%60)}`;push(c=>{c.face.status=s.face.status.slice(0,m.index)+str+s.face.status.slice(m.index+m[0].length);},1000);}
+      break;}
+    case'call':{for(const p of [0,1,2,3,0,1,2,3])push(c=>{c._pulse=p;},p===0?420:170);break;}
+    case'gallery':{const n=Math.min(s.gallery.items.length,40);for(let k=0;k<=n;k++)push(c=>{c.gallery.items=c.gallery.items.slice(0,k);},k===n?hold:Math.min(D,500));break;}
+  }
+  return F;
+}
 
-        function setKatalkTheme(bg, bubbleL, bubbleR, textL, textR, isDark, btn) {
-            document.documentElement.style.setProperty('--kt-bg', bg);
-            document.documentElement.style.setProperty('--kt-bubble-l', bubbleL);
-            document.documentElement.style.setProperty('--kt-bubble-r', bubbleR);
-            document.documentElement.style.setProperty('--kt-text-l', textL);
-            document.documentElement.style.setProperty('--kt-text-r', textR);
-            
-            if (isDark) {
-                document.documentElement.style.setProperty('--kt-text-bg', '#ffffff');
-                document.documentElement.style.setProperty('--kt-date-bg', 'rgba(255,255,255,0.15)');
-                document.documentElement.style.setProperty('--kt-input-bg', '#1e1e1e');
-                document.documentElement.style.setProperty('--kt-input-box', '#2a2a2a');
-                document.documentElement.style.setProperty('--kt-input-icon', '#888888');
-            } else {
-                document.documentElement.style.setProperty('--kt-text-bg', '#111111');
-                document.documentElement.style.setProperty('--kt-date-bg', 'rgba(0,0,0,0.12)');
-                document.documentElement.style.setProperty('--kt-input-bg', '#ffffff');
-                document.documentElement.style.setProperty('--kt-input-box', '#f1f5f9');
-                document.documentElement.style.setProperty('--kt-input-icon', '#94a3b8');
-            }
+/* ═════════════ GIF encoder (median-cut palette + LZW + frame diff) ═════════════ */
+function buildPalette(list,max){
+  let total=0;for(const d of list)total+=d.length>>2;
+  const step=Math.max(1,Math.floor(total/90000));
+  const sample=[];
+  for(const d of list){for(let i=0,n=0;i<d.length;i+=4,n++){if(n%step)continue;if(d[i+3]<128)continue;sample.push((d[i]<<16)|(d[i+1]<<8)|d[i+2]);}}
+  if(!sample.length)sample.push(0);
+  const info=b=>{let r0=255,r1=0,g0=255,g1=0,b0=255,b1=0;for(const p of b){const r=p>>16&255,gg=p>>8&255,bb=p&255;if(r<r0)r0=r;if(r>r1)r1=r;if(gg<g0)g0=gg;if(gg>g1)g1=gg;if(bb<b0)b0=bb;if(bb>b1)b1=bb;}
+    const rr=r1-r0,gr=g1-g0,br=b1-b0,m=Math.max(rr,gr,br);return{ch:m===gr?8:(m===rr?16:0),range:m};};
+  const boxes=[sample],infos=[info(sample)];
+  while(boxes.length<max){
+    let bi=-1,best=0;
+    for(let i=0;i<boxes.length;i++){if(!infos[i].range)continue;const sc=infos[i].range*Math.log2(boxes[i].length+1);if(sc>best){best=sc;bi=i;}}
+    if(bi<0)break;
+    const b=boxes[bi],sh=infos[bi].ch;b.sort((x,y)=>((x>>sh)&255)-((y>>sh)&255));
+    const mid=b.length>>1,a1=b.slice(0,mid),a2=b.slice(mid);
+    boxes.splice(bi,1,a1,a2);infos.splice(bi,1,info(a1),info(a2));
+  }
+  return boxes.map(b=>{let r=0,gg=0,bb=0;for(const p of b){r+=p>>16&255;gg+=p>>8&255;bb+=p&255;}const n=b.length||1;return[Math.round(r/n),Math.round(gg/n),Math.round(bb/n)];});
+}
+function lzw(ix,min){
+  let out=new Uint8Array(Math.max(4096,ix.length>>1)),p=0;
+  const put=b=>{if(p===out.length){const n=new Uint8Array(out.length*2);n.set(out);out=n;}out[p++]=b;};
+  const clear=1<<min,eoi=clear+1;let size=min+1,next=eoi+1,cur=0,shift=0;
+  const emit=c=>{cur|=c<<shift;shift+=size;while(shift>=8){put(cur&255);cur>>>=8;shift-=8;}};
+  let dict=new Map();
+  emit(clear);
+  let prefix=ix[0];
+  for(let i=1;i<ix.length;i++){
+    const k=ix[i],key=(prefix<<8)|k,c=dict.get(key);
+    if(c!==undefined){prefix=c;continue;}
+    emit(prefix);
+    if(next===4096){emit(clear);next=eoi+1;size=min+1;dict=new Map();}
+    else{if(next>=(1<<size))size++;dict.set(key,next++);}
+    prefix=k;
+  }
+  emit(prefix);emit(eoi);
+  if(shift>0)put(cur&255);
+  return out.subarray(0,p);
+}
+function subBlocks(d){const n=d.length,o=new Uint8Array(n+Math.ceil(n/255)+1);let j=0;for(let i=0;i<n;i+=255){const l=Math.min(255,n-i);o[j++]=l;o.set(d.subarray(i,i+l),j);j+=l;}o[j++]=0;return o.subarray(0,j);}
+class GifEnc{
+  constructor(w,h,pal){this.w=w;this.h=h;this.pal=pal;this.lut=new Int16Array(1<<18).fill(-1);this.prev=null;this.frames=[];}
+  near(r,g,b){const k=((r>>2)<<12)|((g>>2)<<6)|(b>>2);let v=this.lut[k];if(v>=0)return v;let bd=1e12;const P=this.pal;
+    for(let i=0;i<P.length;i++){const q=P[i],dr=q[0]-r,dg=q[1]-g,db=q[2]-b,d=dr*dr*3+dg*dg*4+db*db*2;if(d<bd){bd=d;v=i;}}this.lut[k]=v;return v;}
+  add(data,delay){
+    const{w,h}=this,n=w*h,cur=new Uint8Array(n);
+    for(let i=0,j=0;i<n;i++,j+=4)cur[i]=data[j+3]<128?255:this.near(data[j],data[j+1],data[j+2]);
+    let x0=0,y0=0,x1=w-1,y1=h-1;const pv=this.prev;
+    if(pv){x0=w;y0=h;x1=-1;y1=-1;
+      for(let y=0;y<h;y++){const o=y*w;for(let x=0;x<w;x++)if(cur[o+x]!==pv[o+x]){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;y1=y;}}
+      if(x1<0){this.frames[this.frames.length-1].delay+=delay;return;}}
+    const fw=x1-x0+1,fh=y1-y0+1,sub=new Uint8Array(fw*fh);
+    for(let y=0;y<fh;y++){const so=(y+y0)*w+x0;for(let x=0;x<fw;x++){const v=cur[so+x];sub[y*fw+x]=(pv&&pv[so+x]===v)?255:v;}}
+    this.frames.push({x:x0,y:y0,w:fw,h:fh,delay,data:subBlocks(lzw(sub,8))});this.prev=cur;
+  }
+  finish(){
+    const u=v=>[v&255,(v>>8)&255],str=s=>[...s].map(c=>c.charCodeAt(0));
+    const parts=[new Uint8Array([...str('GIF89a'),...u(this.w),...u(this.h),0xF7,0,0])];
+    const gct=new Uint8Array(768);this.pal.forEach((c,i)=>{gct[i*3]=c[0];gct[i*3+1]=c[1];gct[i*3+2]=c[2];});parts.push(gct);
+    parts.push(new Uint8Array([0x21,0xFF,0x0B,...str('NETSCAPE2.0'),3,1,0,0,0]));
+    for(const f of this.frames){
+      parts.push(new Uint8Array([0x21,0xF9,4,(1<<2)|1,...u(Math.max(2,Math.round(f.delay/10))),255,0,0x2C,...u(f.x),...u(f.y),...u(f.w),...u(f.h),0,8]));
+      parts.push(f.data);
+    }
+    parts.push(new Uint8Array([0x3B]));
+    return new Blob(parts,{type:'image/gif'});
+  }
+}
+function gifPlan(){
+  const e=S.exp;
+  if(e.gifMode!=='multi'){const f=buildFrames(S);return{frames:f,keys:[0,f.length-1],name:S.screen};}
+  const list=e.gifScreens.length?e.gifScreens:[S.screen];
+  const frames=[],keys=[],hold=Math.max(1400,e.gifDelay*1.8);
+  for(const k of list){
+    const c=structuredClone(S);c.screen=k;
+    const seg=e.gifAnim?buildFrames(c):[{s:c,delay:hold}];
+    keys.push(frames.length,frames.length+seg.length-1);
+    frames.push(...seg);
+  }
+  return{frames,keys:[...new Set(keys)],name:list.join('-')};
+}
+async function exportGIF(){
+  const {frames,keys,name}=gifPlan(),n=frames.length,sc=S.exp.gifScale,bg=bgVal(S.exp.gifBg);
+  try{
+    const grab=async i=>{const c=await capture(frames[i].s,sc,bg);return{w:c.width,h:c.height,data:c.getContext('2d').getImageData(0,0,c.width,c.height).data};};
+    const cache=new Map();
+    for(let j=0;j<keys.length;j++){busy(`색상 분석 중… ${j+1}/${keys.length}`,.02+.08*(j/keys.length));cache.set(keys[j],await grab(keys[j]));}
+    const pal=buildPalette([...cache.values()].map(f=>f.data),255);
+    const ref=cache.get(keys[0]),W=ref.w,H=ref.h;
+    const enc=new GifEnc(W,H,pal);
+    for(let i=0;i<n;i++){
+      busy(`프레임 캡처 중… ${i+1}/${n}`,.1+.85*(i/n));
+      let f=cache.has(i)?cache.get(i):await grab(i);
+      if(f.w!==W||f.h!==H){const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');const t=document.createElement('canvas');t.width=f.w;t.height=f.h;t.getContext('2d').putImageData(new ImageData(f.data,f.w,f.h),0,0);x.drawImage(t,0,0);f={data:x.getImageData(0,0,W,H).data};}
+      enc.add(f.data,frames[i].delay);cache.delete(i);await tick();
+    }
+    busy('GIF 만드는 중…',.98);await tick();
+    const blob=enc.finish();
+    download(blob,`phone_${name}_${stamp()}.gif`);
+    toast(n>1?`GIF 저장 완료 · ${n}프레임 · ${blob.size<1048576?Math.round(blob.size/1024)+'KB':(blob.size/1048576).toFixed(1)+'MB'}`:'움직일 요소가 없어 정지 GIF로 저장했어요');
+  }catch(err){console.error(err);toast('GIF 저장에 실패했어요');}
+  finally{busyOff();}
+}
 
-            btn.parentElement.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            updateStatusBarColor();
-        }
-
-        function switchTab(tabId, modeId) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.screen-mode').forEach(m => m.classList.remove('active'));
-
-            event.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-            document.getElementById(modeId).classList.add('active');
-
-            document.getElementById('katalk-bg').style.display = (modeId === 'mode-katalk') ? 'block' : 'none';
-            document.getElementById('gallery-bg').style.display = (modeId === 'mode-gallery') ? 'block' : 'none';
-            document.getElementById('out-face-bg').style.display = (modeId === 'mode-face') ? 'block' : 'none';
-            
-            updateStatusBarColor();
-        }
-
-        function updateStatusBarColor() {
-            const modeKatalk = document.getElementById('mode-katalk').classList.contains('active');
-            const modeGallery = document.getElementById('mode-gallery').classList.contains('active');
-            const modeFace = document.getElementById('mode-face').classList.contains('active');
-            const hasBgImage = imageStates.bg.url !== '';
-
-            if (modeGallery) {
-                document.getElementById('status-bar').style.color = '#000';
-            } else if (modeKatalk) {
-                document.getElementById('status-bar').style.color = getComputedStyle(document.documentElement).getPropertyValue('--kt-text-bg').trim();
-            } else if (modeFace) {
-                document.getElementById('status-bar').style.color = '#fff';
-            } else {
-                document.getElementById('status-bar').style.color = hasBgImage ? '#fff' : currentPhoneTextColor;
-            }
-        }
-
-        function updateImageStyle(stateKey, targetId) {
-            const pos = `${document.getElementById(`x-${stateKey}`).value}% ${document.getElementById(`y-${stateKey}`).value}%`;
-            imageStates[stateKey].pos = pos;
-
-            const el = document.getElementById(targetId);
-            if (el && imageStates[stateKey].url) {
-                el.style.backgroundImage = imageStates[stateKey].url;
-                el.style.backgroundSize = 'cover';
-                el.style.backgroundPosition = pos;
-                el.style.backgroundRepeat = 'no-repeat';
-            }
-        }
-
-        function updateProfileStyle() {
-            const pos = `${document.getElementById('x-profile').value}% ${document.getElementById('y-profile').value}%`;
-            imageStates.profile.pos = pos;
-
-            if (imageStates.profile.url) {
-                document.querySelectorAll('.profile-img').forEach(el => {
-                    el.style.backgroundImage = imageStates.profile.url;
-                    el.style.backgroundSize = 'cover';
-                    el.style.backgroundPosition = pos;
-                    el.style.backgroundRepeat = 'no-repeat';
-                });
-            }
-        }
-
-        function handleImageUpload(inputId, stateKey, targetId, boxId, isProfile = false) {
-            document.getElementById(inputId).addEventListener('change', function(e) {
-                if (e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        imageStates[stateKey].url = `url(${event.target.result})`; 
-                        document.getElementById(boxId).style.display = 'flex'; 
-                        
-                        document.getElementById(`x-${stateKey}`).value = 50;
-                        document.getElementById(`y-${stateKey}`).value = 50;
-                        
-                        if (isProfile) {
-                            updateProfileStyle();
-                        } else {
-                            updateImageStyle(stateKey, targetId);
-                            if (stateKey === 'bg') updateStatusBarColor();
-                        }
-                    };
-                    reader.readAsDataURL(e.target.files[0]);
-                }
-            });
-        }
-
-        handleImageUpload('in-bg', 'bg', 'out-bg', 'ctrl-bg-box');
-        handleImageUpload('in-other-pic', 'other', 'out-face-bg', 'ctrl-other-box');
-        handleImageUpload('in-my-pic', 'my', 'out-my-pic', 'ctrl-my-box');
-        handleImageUpload('in-profile', 'profile', null, 'ctrl-profile-box', true);
-
-
-        function addGalleryItem() {
-            const id = Date.now();
-            const ctrl = document.createElement('div');
-            ctrl.className = 'control-block dynamic-block';
-            ctrl.id = `ctrl-g-${id}`;
-            ctrl.innerHTML = `
-                <div class="input-group" style="margin-bottom:0;">
-                    <label>사진 업로드 <button class="btn-delete" onclick="removeElement('ctrl-g-${id}', 'view-g-${id}')">삭제</button></label>
-                    <input type="file" accept="image/*" onchange="previewGalleryImage(this, '${id}')">
-                    <div class="img-controls" id="ctrl-g-box-${id}">
-                        <div class="img-ctrl-row"><span>가로</span><input type="range" id="x-g-${id}" min="0" max="100" value="50" oninput="updateGalleryStyle('${id}')"></div>
-                        <div class="img-ctrl-row"><span>세로</span><input type="range" id="y-g-${id}" min="0" max="100" value="50" oninput="updateGalleryStyle('${id}')"></div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('gallery-controls').appendChild(ctrl);
-
-            const view = document.createElement('div');
-            view.className = 'gallery-item';
-            view.id = `view-g-${id}`;
-            view.style.display = 'none'; 
-            document.getElementById('out-gallery-grid').appendChild(view);
-        }
-
-        function previewGalleryImage(input, id) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const view = document.getElementById(`view-g-${id}`);
-                    view.dataset.url = `url(${event.target.result})`; 
-                    document.getElementById(`ctrl-g-box-${id}`).style.display = 'flex'; 
-                    updateGalleryStyle(id); 
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function updateGalleryStyle(id) {
-            const view = document.getElementById(`view-g-${id}`);
-            if(!view || !view.dataset.url) return;
-            const pos = `${document.getElementById(`x-g-${id}`).value}% ${document.getElementById(`y-g-${id}`).value}%`;
-            
-            view.style.backgroundImage = view.dataset.url;
-            view.style.backgroundSize = 'cover';
-            view.style.backgroundPosition = pos;
-            view.style.backgroundRepeat = 'no-repeat';
-            view.style.display = 'block'; 
-        }
-
-        const widgetTypes = {
-            'msg': { icon: '💬', name: '메시지' },
-            'fortune': { icon: '⭐', name: '오늘의 운세' },
-            'warning': { icon: '🚨', name: '시스템 경고' },
-            'alarm': { icon: '⏰', name: '알람' },
-            'music': { icon: '🎵', name: '음악 플레이어' },
-            'hot': { icon: '🔥', name: '실시간 인기글' }
-        };
-
-        function updateWidgetType(id, type) {
-            document.getElementById(`view-w-icon-${id}`).innerText = widgetTypes[type].icon;
-            document.getElementById(`view-w-name-${id}`).innerText = widgetTypes[type].name;
-        }
-
-        function addWidget() {
-            const id = Date.now();
-            const ctrl = document.createElement('div');
-            ctrl.className = 'control-block dynamic-block';
-            ctrl.id = `ctrl-w-${id}`;
-            ctrl.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <span style="font-weight:800; color:#0f172a; font-size:15px;">위젯 설정</span>
-                    <button class="btn-delete" onclick="removeElement('ctrl-w-${id}', 'view-w-${id}')">삭제</button>
-                </div>
-                <div class="row">
-                    <div class="input-group">
-                        <select onchange="updateWidgetType('${id}', this.value)">
-                            <option value="msg">💬 메시지</option>
-                            <option value="fortune">⭐ 오늘의 운세</option>
-                            <option value="warning">🚨 시스템 경고</option>
-                            <option value="alarm">⏰ 알람</option>
-                            <option value="music">🎵 음악 플레이어</option>
-                            <option value="hot">🔥 실시간 인기글</option>
-                        </select>
-                    </div>
-                    <div class="input-group">
-                        <input type="text" placeholder="제목 입력" oninput="updateText('view-t-${id}', this.value); toggleW('${id}')">
-                    </div>
-                </div>
-                <div class="input-group" style="margin-bottom:0;">
-                    <textarea placeholder="내용을 입력하세요..." oninput="updateText('view-d-${id}', this.value); toggleW('${id}')"></textarea>
-                </div>
-            `;
-            document.getElementById('widget-controls').appendChild(ctrl);
-
-            const view = document.createElement('div');
-            view.className = 'widget'; view.id = `view-w-${id}`; view.style.display = 'none';
-            view.innerHTML = `
-                <div class="w-header">
-                    <span><span id="view-w-icon-${id}">💬</span> <span id="view-w-name-${id}">메시지</span></span>
-                    <span>지금</span>
-                </div>
-                <div class="w-title" id="view-t-${id}"></div>
-                <div class="w-desc" id="view-d-${id}"></div>
-            `;
-            document.getElementById('widget-display').appendChild(view);
-        }
-        function toggleW(id) { document.getElementById(`view-w-${id}`).style.display = 'block'; }
-
-        function addChat(side) {
-            const id = Date.now();
-            const ctrl = document.createElement('div');
-            ctrl.className = 'control-block dynamic-block';
-            ctrl.id = `ctrl-c-${id}`;
-            ctrl.innerHTML = `
-                <div class="input-group" style="margin-bottom:0;">
-                    <label>${side==='left'?'상대방':'나'} 말풍선 <button class="btn-delete" onclick="removeElement('ctrl-c-${id}', 'view-c-${id}')">삭제</button></label>
-                    <textarea placeholder="대화 내용 입력" oninput="updateText('v-b-${id}', this.value); toggleC('${id}')"></textarea>
-                </div>
-            `;
-            document.getElementById('chat-controls').appendChild(ctrl);
-
-            const view = document.createElement('div');
-            view.className = `chat-row ${side}`; view.id = `view-c-${id}`; view.style.display = 'none';
-            
-            let profileStyle = '';
-            if (side === 'left' && imageStates.profile.url) {
-                profileStyle = `style="background-image: ${imageStates.profile.url}; background-size: cover; background-position: ${imageStates.profile.pos}; background-repeat: no-repeat;"`;
-            }
-
-            view.innerHTML = side==='left' ? `<div class="profile-img" ${profileStyle}></div><div class="chat-content"><div class="chat-name k-dyn-name"></div><div class="bubble" id="v-b-${id}"></div></div>` : `<div class="chat-content"><div class="bubble" id="v-b-${id}"></div></div>`;
-            document.getElementById('chat-display').appendChild(view);
-            
-            const currentName = document.getElementById('katalk-name').innerText;
-            updateAllChatNames(currentName);
-        }
-        function toggleC(id) { document.getElementById(`view-c-${id}`).style.display = 'flex'; }
-        function updateAllChatNames(n) { document.querySelectorAll('.k-dyn-name').forEach(el => el.innerText = n); }
-        
-        function removeElement(c, v) { 
-            const ctrl = document.getElementById(c);
-            const view = document.getElementById(v);
-            if(ctrl) ctrl.remove(); 
-            if(view) view.remove(); 
-        }
-
-        async function captureUltraHQ() {
-            const btn = document.getElementById('btn-capture-action');
-            const originalText = btn.innerText;
-            btn.innerText = "⏳ 렌더링 중...";
-
-            try {
-                await document.fonts.ready;
-                await new Promise(r => setTimeout(r, 300));
-
-                const target = document.getElementById('capture-area');
-                const clone = target.cloneNode(true);
-
-                const wrapper = document.createElement('div');
-                wrapper.style.padding = "30px"; 
-                wrapper.style.background = "transparent";
-                wrapper.style.position = "fixed";
-                wrapper.style.top = "-9999px"; 
-                wrapper.style.left = "0";
-                wrapper.style.zIndex = "9999";
-                
-                clone.style.margin = "0";
-                clone.querySelectorAll("*").forEach(el => {
-                    el.style.transformStyle = "flat";
-                    el.style.animation = "none";
-                });
-
-                const origElements = target.querySelectorAll('*');
-                const cloneElements = clone.querySelectorAll('*');
-                for (let i = 0; i < origElements.length; i++) {
-                    const orig = origElements[i];
-                    const cln = cloneElements[i];
-                    if (orig.style.backgroundImage && orig.style.backgroundImage !== 'none') {
-                        cln.style.backgroundImage = orig.style.backgroundImage;
-                        cln.style.backgroundPosition = orig.style.backgroundPosition;
-                        cln.style.backgroundSize = orig.style.backgroundSize || 'cover';
-                        cln.style.backgroundRepeat = orig.style.backgroundRepeat || 'no-repeat';
-                    }
-                }
-
-                wrapper.appendChild(clone);
-                document.body.appendChild(wrapper);
-
-                const images = [...clone.querySelectorAll('img')];
-                await Promise.all(images.map(img => {
-                    if (img.complete) return Promise.resolve();
-                    return new Promise(res => { img.onload = res; img.onerror = res; });
-                }));
-
-                const canvas = await html2canvas(wrapper, {
-                    scale: 5, 
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: null, 
-                    logging: false
-                });
-
-                const link = document.createElement("a");
-                link.download = "Mobile_Phone_Editor_HQ.png";
-                link.href = canvas.toDataURL("image/png", 1.0);
-                link.click();
-
-                document.body.removeChild(wrapper);
-
-            } catch (err) {
-                console.error(err);
-                alert("캡처에 실패했습니다.");
-            } finally {
-                btn.innerText = originalText;
-            }
-        }
-
-        window.onload = function() { 
-            generateStatusBar(); 
-            generateMainDateTime(); 
-            generateCallTime(); 
-            generateKatalkDate(); 
-            addWidget(); 
-            addGalleryItem(); 
-        };
-    </script>
+/* ═════════════ Boot ═════════════ */
+renderEditor();renderPreview();
+if(document.fonts)document.fonts.ready.then(fit);
+</script>
 </body>
 </html>
