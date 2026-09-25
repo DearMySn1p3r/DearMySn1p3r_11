@@ -532,7 +532,7 @@ function defaults(){
     screen:'lock',
     device:{model:'island',frame:'black',bezel:true,statusColor:'auto',homeBar:true},
     status:{show:true,time:`${t.h12}:${pad(t.m)}`,battery:82,signal:4,net:'5G',showPct:false,charging:false},
-    lock:{wall:null,preset:0,dim:0,date:`${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`,time:`${t.h12}:${pad(t.m)}`,timeColor:'auto',weight:600,buttons:true,notiStyle:'glass',
+    lock:{wall:null,preset:0,dim:0,date:`${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`,time:`${t.h12}:${pad(t.m)}`,timeColor:'auto',weight:600,buttons:true,shadow:true,notiStyle:'glass',
       notis:[{id:uid(),app:'sms',title:'이름',body:'알림 내용',time:'지금'},{id:uid(),app:'alarm',title:'알람',body:'알림 내용',time:'지금'}]},
     chat:{theme:0,name:'이름',profile:null,bgImg:null,date:`${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 ${WD[d.getDay()]}요일`,unread:0,typing:false,
       messages:[
@@ -611,9 +611,10 @@ const visibleMsg=m=>(m.text&&m.text.trim())||(m.img&&m.img.url);
 function screenLock(s){
   const L=s.lock, tc=lockTimeColor(s);
   const bg=`<div class="bgl" style="background:${WALLS[L.preset]?.[0]||WALLS[0][0]}">${bgImg(L.wall)}${L.dim?`<div class="bgl" style="background:rgba(0,0,0,${L.dim/100})"></div>`:''}</div>`;
+  const tsh=L.shadow?(isDarkColor(tc)?'text-shadow:0 1px 10px rgba(255,255,255,.55)':'text-shadow:0 2px 16px rgba(0,0,0,.45),0 1px 4px rgba(0,0,0,.35)'):'';
   const nst=(L.notiStyle==='glass'&&isDarkColor(tc))?'light':L.notiStyle;const lb=isDarkColor(tc)?'rgba(0,0,0,.07)':'rgba(255,255,255,.16)',li=isDarkColor(tc)?'#111':'#fff';
   const notis=L.notis.map(n=>{const a=APPS[n.app]||APPS.kakao;return`<div class="nt ${nst}"><div class="nt-ic" style="background:${a.bg}">${a.ic()}</div><div class="nt-tx"><div class="nt-h"><b>${esc(n.title||a.n)}</b><span>${esc(n.time)}</span></div>${n.body?`<div class="nt-b">${esc(n.body)}</div>`:''}</div></div>`;}).join('');
-  const body=`<div class="lk"><div class="lk-date" style="color:${tc}">${esc(L.date)}</div><div class="lk-time" style="color:${tc};font-weight:${L.weight}">${esc(L.time)}</div><div class="lk-notis">${notis}</div></div>
+  const body=`<div class="lk"><div class="lk-date" style="color:${tc};${tsh}">${esc(L.date)}</div><div class="lk-time" style="color:${tc};font-weight:${L.weight};${tsh}">${esc(L.time)}</div><div class="lk-notis">${notis}</div></div>
    ${L.buttons?`<div class="lk-btn" style="right:44px;background:${lb}">${I.cam(li,20)}</div>`:''}`;
   return{bg,body};
 }
@@ -767,7 +768,7 @@ function E_lock(){
   +card('시계',`<div class="g2">${fld('시간',txt('lock.time','11:04'))}${fld('날짜',txt('lock.date','9월 24일 목요일'))}</div>
     ${fld('글자 색',sws('lock.timeColor',[['auto','conic-gradient(#fff 0 50%,#111 0)','자동'],['#ffffff','#fff','흰색'],['#111111','#111','검정'],['#d4d4d8','#d4d4d8','라이트 그레이'],['#52525b','#52525b','다크 그레이']]))}
     ${fld('굵기',seg('lock.weight',[[300,'얇게'],[500,'보통'],[600,'두껍게'],[800,'아주 두껍게']]))}
-    ${tog('lock.buttons','카메라 버튼')}`,randBtn('lock'))
+    ${tog('lock.shadow','시계 그림자 (밝은 배경에서도 잘 보이게)')}${tog('lock.buttons','카메라 버튼')}`,randBtn('lock'))
   +card('알림',`${fld('스타일',seg('lock.notiStyle',[['glass','투명'],['light','밝게'],['dark','어둡게']]))}
     ${L.notis.map((n,i)=>`<div class="item"><div class="item-h"><span class="badge">알림 ${i+1}</span>${mv('lock.notis',i,L.notis.length)}</div>
       <div class="g2">${fld('앱',sel(`lock.notis.${i}.app`,Object.entries(APPS).map(([k,a])=>[k,a.n])))}${fld('시간',txt(`lock.notis.${i}.time`,'지금'))}</div>
