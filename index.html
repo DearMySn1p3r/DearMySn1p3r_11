@@ -421,6 +421,20 @@ select.in{background-position:right 11px center;padding-right:28px}
 .gseq button.on{border-color:var(--ink);color:var(--ink)}
 .gseq button.on i{background:var(--ink);border-color:var(--ink);color:#fff}
 .lk-notis{max-height:450px;overflow:hidden;justify-content:flex-end}
+
+/* soft shadows so white elements stay visible on light backgrounds */
+.dev{box-shadow:0 44px 60px -34px rgba(0,0,0,.45),0 6px 16px -8px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.09)}
+.stage.nosh .dev{box-shadow:0 0 0 1px rgba(0,0,0,.09)}
+.sb.lt{text-shadow:0 1px 3px rgba(0,0,0,.35)}
+.sb.lt .bars i{border:.5px solid rgba(0,0,0,.14)}
+.nt.light{border:.5px solid rgba(0,0,0,.08);background:rgba(246,246,248,.96)}
+.nt.glass{border:.5px solid rgba(0,0,0,.07)}
+.lk-notis{padding-bottom:14px;bottom:104px}
+.nt.glass .nt-tx{text-shadow:0 1px 3px rgba(0,0,0,.3)}
+.lk-btn{border:.5px solid rgba(0,0,0,.07)}
+.cl,.cl-it{text-shadow:0 1px 6px rgba(0,0,0,.35)}
+.fc-top{text-shadow:0 1px 8px rgba(0,0,0,.4)}
+.fc-bar{box-shadow:0 6px 20px -6px rgba(0,0,0,.3)}
 </style>
 </head>
 <body>
@@ -462,7 +476,7 @@ const I={
   plus:(c,s=20)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path d="M12 4.5v15M4.5 12h15" stroke="${c}" stroke-width="2.2" stroke-linecap="round"/></svg>`,
   smile:c=>`<svg width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="${c}" stroke-width="1.8"/><circle cx="9" cy="10" r="1.2" fill="${c}"/><circle cx="15" cy="10" r="1.2" fill="${c}"/><path d="M8.5 14.3c1.8 2.1 5.2 2.1 7 0" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
   hash:c=>`<svg width="22" height="22" viewBox="0 0 24 24"><path d="M9.5 4L7.5 20M16.5 4l-2 16M4.5 9h16M3.5 15h16" stroke="${c}" stroke-width="1.8" stroke-linecap="round"/></svg>`,
-  wifi:c=>`<svg width="17" height="12" viewBox="0 0 17 12"><path fill="${c}" d="M8.5 2.4c2.4 0 4.6.9 6.3 2.5l1.3-1.3C14.1 1.6 11.4.5 8.5.5S2.9 1.6.9 3.6l1.3 1.3C3.9 3.3 6.1 2.4 8.5 2.4zm0 3.7c1.4 0 2.7.5 3.7 1.4l1.3-1.3C12.2 5 10.4 4.3 8.5 4.3S4.8 5 3.5 6.2l1.3 1.3c1-.9 2.3-1.4 3.7-1.4zm0 3.6c.5 0 1 .2 1.3.5L8.5 11.6 7.2 10.2c.3-.3.8-.5 1.3-.5z"/></svg>`,
+  wifi:c=>`<svg width="17" height="12" viewBox="0 0 17 12"><path fill="${c}" ${c==='#fff'?'stroke="rgba(0,0,0,.16)" stroke-width=".5"':''} d="M8.5 2.4c2.4 0 4.6.9 6.3 2.5l1.3-1.3C14.1 1.6 11.4.5 8.5.5S2.9 1.6.9 3.6l1.3 1.3C3.9 3.3 6.1 2.4 8.5 2.4zm0 3.7c1.4 0 2.7.5 3.7 1.4l1.3-1.3C12.2 5 10.4 4.3 8.5 4.3S4.8 5 3.5 6.2l1.3 1.3c1-.9 2.3-1.4 3.7-1.4zm0 3.6c.5 0 1 .2 1.3.5L8.5 11.6 7.2 10.2c.3-.3.8-.5 1.3-.5z"/></svg>`,
   msg:(c,s=22)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.8 5.3 4.6 6.7L5.7 21l3.9-2.5c.8.1 1.6.2 2.4.2 5.5 0 10-3.6 10-8S17.5 3 12 3z"/></svg>`,
   phone:(c,s=22,rot=0)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><g transform="rotate(${rot} 12 12)"><path fill="${c}" d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z"/></g></svg>`,
   mic:(c,s=26)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24"><path fill="${c}" d="M12 14c1.7 0 3-1.3 3-3V5c0-1.7-1.3-3-3-3S9 3.3 9 5v6c0 1.7 1.3 3 3 3zm5.3-3c0 3-2.5 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.4 2.7 6.2 6 6.7V21h2v-3.3c3.3-.5 6-3.3 6-6.7h-1.7z"/></svg>`,
@@ -572,6 +586,7 @@ function bgImg(im,extra=''){
   return `<div class="imgbox" ${extra}><div style="background-image:url('${im.url}');background-position:${im.x}% ${im.y}%;transform:scale(${(im.z||100)/100});transform-origin:${im.x}% ${im.y}%"></div></div>`;
 }
 const isDarkColor=c=>{const h=c.replace('#','');const f=h.length===3?h.split('').map(x=>x+x).join(''):h;const r=parseInt(f.substr(0,2),16),gg=parseInt(f.substr(2,2),16),b=parseInt(f.substr(4,2),16);return (r*299+gg*587+b*114)/1000<140;};
+const wallLight=s=>!s.lock.wall&&!!(WALLS[s.lock.preset]&&WALLS[s.lock.preset][2]);
 function lockTimeColor(s){
   const c=s.lock.timeColor;
   if(c!=='auto')return c;
@@ -581,7 +596,7 @@ function statusColor(s){
   const d=s.device.statusColor;
   if(d!=='auto')return d;
   switch(s.screen){
-    case'lock':return isDarkColor(lockTimeColor(s))?'#000':'#fff';
+    case'lock':return (isDarkColor(lockTimeColor(s))||wallLight(s))?'#000':'#fff';
     case'chat':return KT[s.chat.theme].dark?'#fff':'#000';
     case'face':case'call':return'#fff';
     default:return'#000';
@@ -597,13 +612,13 @@ function homeColor(s){
 }
 function statusHTML(s,c){
   const st=s.status,m=s.device.model;
-  const dim=c==='#fff'?'rgba(255,255,255,.42)':'rgba(0,0,0,.32)';
+  const dim=c==='#fff'?'rgba(175,175,182,.75)':'rgba(0,0,0,.32)';
   if(!st.show)return`<div class="sb ${m}"></div>`;
   const bars=[4,6,8.5,11].map((h,i)=>`<i style="height:${h}px;background:${i<st.signal?c:dim}"></i>`).join('');
   const net=st.net==='wifi'?I.wifi(c):`<span class="net">${esc(st.net)}</span>`;
   const pct=Math.max(0,Math.min(100,+st.battery||0));
   const fill=st.charging?'#34c759':(pct<=20?'#ff3b30':c);
-  return `<div class="sb ${m}" style="color:${c}"><div class="sb-l">${esc(st.time)}</div><div class="sb-r"><div class="bars">${bars}</div>${net}${st.showPct?`<span class="pct">${pct}%</span>`:''}<div class="batw"><div class="bat" style="border-color:${dim}"><i style="width:${Math.max(8,pct)}%;background:${fill}"></i></div><div class="nub" style="background:${dim}"></div></div></div></div>`;
+  return `<div class="sb ${m} ${c==='#fff'?'lt':''}" style="color:${c}"><div class="sb-l">${esc(st.time)}</div><div class="sb-r"><div class="bars">${bars}</div>${net}${st.showPct?`<span class="pct">${pct}%</span>`:''}<div class="batw"><div class="bat" style="border-color:${dim}"><i style="width:${Math.max(8,pct)}%;background:${fill}"></i></div><div class="nub" style="background:${dim}"></div></div></div></div>`;
 }
 const hasUnread=v=>v!=null&&String(v).trim()!==''&&String(v).trim()!=='0';
 const visibleMsg=m=>(m.text&&m.text.trim())||(m.img&&m.img.url);
@@ -612,7 +627,7 @@ function screenLock(s){
   const L=s.lock, tc=lockTimeColor(s);
   const bg=`<div class="bgl" style="background:${WALLS[L.preset]?.[0]||WALLS[0][0]}">${bgImg(L.wall)}${L.dim?`<div class="bgl" style="background:rgba(0,0,0,${L.dim/100})"></div>`:''}</div>`;
   const tsh=L.shadow?(isDarkColor(tc)?'text-shadow:0 1px 10px rgba(255,255,255,.55)':'text-shadow:0 2px 16px rgba(0,0,0,.45),0 1px 4px rgba(0,0,0,.35)'):'';
-  const nst=(L.notiStyle==='glass'&&isDarkColor(tc))?'light':L.notiStyle;const lb=isDarkColor(tc)?'rgba(0,0,0,.07)':'rgba(255,255,255,.16)',li=isDarkColor(tc)?'#111':'#fff';
+  const lightBg=isDarkColor(tc)||wallLight(s);const nst=(L.notiStyle==='glass'&&lightBg)?'light':L.notiStyle;const lb=lightBg?'rgba(0,0,0,.07)':'rgba(255,255,255,.16)',li=lightBg?'#111':'#fff';
   const notis=L.notis.map(n=>{const a=APPS[n.app]||APPS.kakao;return`<div class="nt ${nst}"><div class="nt-ic" style="background:${a.bg}">${a.ic()}</div><div class="nt-tx"><div class="nt-h"><b>${esc(n.title||a.n)}</b><span>${esc(n.time)}</span></div>${n.body?`<div class="nt-b">${esc(n.body)}</div>`:''}</div></div>`;}).join('');
   const body=`<div class="lk"><div class="lk-date" style="color:${tc};${tsh}">${esc(L.date)}</div><div class="lk-time" style="color:${tc};font-weight:${L.weight};${tsh}">${esc(L.time)}</div><div class="lk-notis">${notis}</div></div>
    ${L.buttons?`<div class="lk-btn" style="right:44px;background:${lb}">${I.cam(li,20)}</div>`:''}`;
@@ -709,7 +724,7 @@ const SCREEN_FN={lock:screenLock,chat:screenChat,sms:screenSms,face:screenFace,c
 function stageHTML(s,opt={}){
   const d=s.device, sc=statusColor(s);
   const {bg,body}=SCREEN_FN[s.screen](s);
-  const home=d.homeBar?`<div class="home" style="background:${homeColor(s)}"></div>`:'';
+  const hc=homeColor(s);const home=d.homeBar?`<div class="home" style="background:${hc};${/255,255,255/.test(hc)?'border:.5px solid rgba(0,0,0,.14)':''}"></div>`:'';
   const inner=`${bg}<div class="lay">${statusHTML(s,sc)}${body}</div>${home}`;
   if(!d.bezel)return`<div class="stage flat"><div class="scr" style="border-radius:0">${inner}</div></div>`;
   const F=FRAMES[d.frame]||FRAMES.black, m=d.model;
