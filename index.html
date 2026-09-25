@@ -151,7 +151,7 @@ select.in{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns=
 .bgl{position:absolute;left:0;top:0;right:0;bottom:0;z-index:0}
 .lay{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;flex-direction:column;z-index:2}
 .imgbox{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden}
-.imgbox>div{position:absolute;left:0;top:0;right:0;bottom:0;background-size:cover;background-repeat:no-repeat}
+.imgbox>div{position:absolute;background-size:100% 100%;background-repeat:no-repeat}
 .home{position:absolute;bottom:8px;left:50%;margin-left:-68px;width:136px;height:5px;border-radius:3px;z-index:30}
 
 .sb{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 14px 0;font-size:16.5px;font-weight:600;letter-spacing:-.2px;position:relative;z-index:5}
@@ -435,6 +435,20 @@ select.in{background-position:right 11px center;padding-right:28px}
 .cl,.cl-it{text-shadow:0 1px 6px rgba(0,0,0,.35)}
 .fc-top{text-shadow:0 1px 8px rgba(0,0,0,.4)}
 .fc-bar{box-shadow:0 6px 20px -6px rgba(0,0,0,.3)}
+
+/* image navigator */
+.nav{margin-top:12px;padding:14px;border:1px solid var(--line);border-radius:10px;background:#fafafa}
+.nav.bare{border:0;padding:0;background:none;margin-top:10px}
+.nav-view{position:relative;margin:0 auto;border-radius:6px;overflow:hidden;cursor:grab;touch-action:none;user-select:none;background:#eee}
+.nav-view:active{cursor:grabbing}
+.nav-img{position:absolute;inset:0;background-size:100% 100%;pointer-events:none}
+.nav-rect{position:absolute;border:1.5px solid #fff;border-radius:2px;box-shadow:0 0 0 9999px rgba(0,0,0,.5),0 0 0 .5px rgba(0,0,0,.5);pointer-events:none}
+.nav-bar{display:flex;align-items:center;gap:8px;margin-top:12px}
+.nav-bar input{flex:1;appearance:none;height:2px;background:#dedede;outline:none}
+.nav-bar input::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--ink);cursor:pointer}
+.nav-bar .mini{white-space:nowrap;flex:none}
+.nav-z{width:36px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:var(--sub)}
+.nav-tip{margin-top:8px;font-size:10.5px;color:var(--mute);text-align:center}
 </style>
 </head>
 <body>
@@ -560,7 +574,7 @@ function defaults(){
     face:{other:null,me:null,name:'이름',status:'00:00',pip:true},
     call:{name:'이름',sub:'휴대전화',photo:null},
     gallery:{title:'최근 항목',cols:3,items:[]},
-    exp:{scale:3,bg:'#ffffff',shadow:true,gifScale:1.5,gifDelay:800,gifBg:'#ffffff',typing:true,gifMode:'single',gifScreens:['lock','chat','sms'],gifAnim:true},
+    exp:{scale:3,bg:'#ffffff',shadow:true,gifScale:2,gifSpeed:1.5,gifBg:'#ffffff',typing:true,gifMode:'single',gifScreens:['lock','chat','sms'],gifAnim:true},
   };
 }
 function merge(base,src){
@@ -575,15 +589,32 @@ function merge(base,src){
 }
 let S=defaults();
 try{const raw=localStorage.getItem(KEY);if(raw)S=merge(defaults(),JSON.parse(raw));}catch(e){}
+if(!(S.exp.gifScale>=1.5))S.exp.gifScale=2;if(![0.75,1,1.5,2.5].includes(S.exp.gifSpeed))S.exp.gifSpeed=1.5;
 const ui={tab:'screen',gsel:-1};
 
 const g=p=>p.split('.').reduce((o,k)=>o==null?o:o[k],S);
 function sp(p,v){const ks=p.split('.');let o=S;for(let i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks[ks.length-1]]=v;}
 
 /* ═════════════ Phone rendering ═════════════ */
-function bgImg(im,extra=''){
+const SA=380/824;
+function imgLayout(im,ca){
+  const a=im.ar||1,z=Math.max(1,(im.z||100)/100),H=1/ca;
+  let iw=Math.max(1,a*H),ih=iw/a;iw*=z;ih*=z;
+  const cx=(im.x??50)/100,cy=(im.y??50)/100;
+  let l=.5-cx*iw,t=H/2-cy*ih;
+  l=Math.min(0,Math.max(1-iw,l));t=Math.min(0,Math.max(H-ih,t));
+  return{iw,ih,H,l,t,vx:-l/iw,vy:-t/ih,vw:1/iw,vh:H/ih};
+}
+function bgImg(im,ca=1){
   if(!im||!im.url)return'';
-  return `<div class="imgbox" ${extra}><div style="background-image:url('${im.url}');background-position:${im.x}% ${im.y}%;transform:scale(${(im.z||100)/100});transform-origin:${im.x}% ${im.y}%"></div></div>`;
+  const L=imgLayout(im,ca);
+  return `<div class="imgbox"><div style="left:${(L.l*100).toFixed(3)}%;top:${(L.t/L.H*100).toFixed(3)}%;width:${(L.iw*100).toFixed(3)}%;height:${(L.ih/L.H*100).toFixed(3)}%;background-image:url('${im.url}')"></div></div>`;
+}
+function aspectOf(p,im){
+  if(/^(lock\.wall|face\.other|call\.photo|chat\.bgImg)$/.test(p))return SA;
+  if(p==='face.me')return 104/156;
+  if(/^chat\.messages\.\d+\.img$/.test(p)){const a=im?.ar||1;return S.screen==='sms'?200/Math.min(280,Math.round(200/a)):190/Math.min(260,Math.round(190/a));}
+  return 1;
 }
 const isDarkColor=c=>{const h=c.replace('#','');const f=h.length===3?h.split('').map(x=>x+x).join(''):h;const r=parseInt(f.substr(0,2),16),gg=parseInt(f.substr(2,2),16),b=parseInt(f.substr(4,2),16);return (r*299+gg*587+b*114)/1000<140;};
 const wallLight=s=>!s.lock.wall&&!!(WALLS[s.lock.preset]&&WALLS[s.lock.preset][2]);
@@ -625,7 +656,7 @@ const visibleMsg=m=>(m.text&&m.text.trim())||(m.img&&m.img.url);
 
 function screenLock(s){
   const L=s.lock, tc=lockTimeColor(s);
-  const bg=`<div class="bgl" style="background:${WALLS[L.preset]?.[0]||WALLS[0][0]}">${bgImg(L.wall)}${L.dim?`<div class="bgl" style="background:rgba(0,0,0,${L.dim/100})"></div>`:''}</div>`;
+  const bg=`<div class="bgl" style="background:${WALLS[L.preset]?.[0]||WALLS[0][0]}">${bgImg(L.wall,SA)}${L.dim?`<div class="bgl" style="background:rgba(0,0,0,${L.dim/100})"></div>`:''}</div>`;
   const tsh=L.shadow?(isDarkColor(tc)?'text-shadow:0 1px 10px rgba(255,255,255,.55)':'text-shadow:0 2px 16px rgba(0,0,0,.45),0 1px 4px rgba(0,0,0,.35)'):'';
   const lightBg=isDarkColor(tc)||wallLight(s);const nst=(L.notiStyle==='glass'&&lightBg)?'light':L.notiStyle;const lb=lightBg?'rgba(0,0,0,.07)':'rgba(255,255,255,.16)',li=lightBg?'#111':'#fff';
   const notis=L.notis.map(n=>{const a=APPS[n.app]||APPS.kakao;return`<div class="nt ${nst}"><div class="nt-ic" style="background:${a.bg}">${a.ic()}</div><div class="nt-tx"><div class="nt-h"><b>${esc(n.title||a.n)}</b><span>${esc(n.time)}</span></div>${n.body?`<div class="nt-b">${esc(n.body)}</div>`:''}</div></div>`;}).join('');
@@ -646,7 +677,7 @@ function ktRows(s,th){
     const bc=L?th.l:th.r, tc=L?th.tl:th.tr;
     let bub;
     if(typing)bub=`<div class="kt-b ${first?'tail':''}" style="background:${bc}"><div class="dots">${('<i style="background:'+(th.dark&&L?'#aaa':'#9a9aa2')+'"></i>').repeat(3)}</div></div>`;
-    else if(m.img?.url){const h=Math.min(260,Math.round(190/(m.img.ar||1)));bub=`<div class="kt-img" style="height:${h}px">${bgImg(m.img)}</div>`;}
+    else if(m.img?.url){const h=Math.min(260,Math.round(190/(m.img.ar||1)));bub=`<div class="kt-img" style="height:${h}px">${bgImg(m.img,190/h)}</div>`;}
     else bub=`<div class="kt-b ${first?'tail':''}" style="background:${bc};color:${tc}">${esc(m.text)}</div>`;
     const meta=typing?'':`<div class="kt-meta ${L?'':'r'}" style="color:${th.dark?'#e5e5e5':'#333'}">${!L&&m.unread?'<i>1</i>':''}${lastT&&m.time?`<span>${esc(m.time)}</span>`:''}</div>`;
     if(L)return`<div class="kt-row l ${first?'first':''}">${first?`<div class="kt-pf">${pf}</div>`:'<div class="kt-pf kph"></div>'}<div>${first?`<div class="kt-n" style="color:${th.dark?'#ddd':'#222'}">${name}</div>`:''}<div class="kt-line">${bub}${meta}</div></div></div>`;
@@ -659,7 +690,7 @@ function ktRows(s,th){
 }
 function screenChat(s){
   const C=s.chat, th=KT[C.theme]||KT[0], hc=th.dark?'#fff':'#111';
-  const bg=`<div class="bgl" style="background:${th.bg}">${bgImg(C.bgImg)}</div>`;
+  const bg=`<div class="bgl" style="background:${th.bg}">${bgImg(C.bgImg,SA)}</div>`;
   const ib=th.dark?'#1c1c1e':'#ffffff', fb=th.dark?'#2c2c2e':'#f2f2f4', icn=th.dark?'#8e8e93':'#8e8e93';
   const body=`<div class="kt-head" style="color:${hc}"><div class="kt-back">${I.chevL(hc,19)}${hasUnread(C.unread)?`<span>${esc(C.unread)}</span>`:''}</div><div class="kt-name">${esc(C.name)}</div><div class="kt-icons">${I.search(hc)}${I.menu(hc)}</div></div>
   <div class="list"><div class="inner kt-inner">${C.date?`<div class="kt-dw"><span class="kt-date" style="background:${th.dark?'rgba(255,255,255,.12)':'rgba(0,0,0,.13)'};color:#fff">${esc(C.date)}</span></div>`:''}${ktRows(s,th)}</div></div>
@@ -677,7 +708,7 @@ function screenSms(s){
     const L=m.side==='left';
     let bub;
     if(m._t)bub=`<div class="im-b"><div class="dots">${'<i style="background:#8e8e93"></i>'.repeat(3)}</div></div>`;
-    else if(m.img?.url){const h=Math.min(280,Math.round(200/(m.img.ar||1)));bub=`<div class="im-img" style="height:${h}px">${bgImg(m.img)}</div>`;}
+    else if(m.img?.url){const h=Math.min(280,Math.round(200/(m.img.ar||1)));bub=`<div class="im-img" style="height:${h}px">${bgImg(m.img,200/h)}</div>`;}
     else bub=`<div class="im-b" ${L?'':`style="background:${blue};color:#fff"`}>${esc(m.text)}</div>`;
     return`<div class="im-row ${L?'l':'r'} ${first?'first':''} ${last?'last':''}">${bub}</div>${i===lastRight&&M.read?`<div class="im-read">${esc(M.read)}</div>`:''}`;
   }).join('');
@@ -691,15 +722,15 @@ function screenSms(s){
 }
 function screenFace(s){
   const F=s.face;
-  const bg=`<div class="bgl" style="background:linear-gradient(175deg,#4a4d55,#1b1c20)">${F.other?.url?bgImg(F.other):`<div style="position:absolute;left:0;right:0;top:330px;display:flex;justify-content:center;transform:scale(3.2)">${I.person('rgba(255,255,255,.14)')}</div>`}</div>`;
+  const bg=`<div class="bgl" style="background:linear-gradient(175deg,#4a4d55,#1b1c20)">${F.other?.url?bgImg(F.other,SA):`<div style="position:absolute;left:0;right:0;top:330px;display:flex;justify-content:center;transform:scale(3.2)">${I.person('rgba(255,255,255,.14)')}</div>`}</div>`;
   const body=`<div class="fc-shade"></div><div class="fc-top"><h2>${esc(F.name)}</h2><p>${esc(F.status)}</p></div>
-  ${F.pip?`<div class="fc-pip">${F.me?.url?bgImg(F.me):`<div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center">${I.person('rgba(255,255,255,.35)')}</div>`}</div>`:''}
+  ${F.pip?`<div class="fc-pip">${F.me?.url?bgImg(F.me,104/156):`<div style="position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center">${I.person('rgba(255,255,255,.35)')}</div>`}</div>`:''}
   <div class="fc-bar"><div class="fc-btn">${I.speaker('#fff')}</div><div class="fc-btn">${I.video('#fff')}</div><div class="fc-btn">${I.mic('#fff')}</div><div class="fc-btn red">${I.phone('#fff',28,135)}</div></div>`;
   return{bg,body};
 }
 function screenCall(s){
   const C=s.call, p=s._pulse||0;
-  const bg=`<div class="bgl" style="background:linear-gradient(175deg,#3c3f46,#1a1b1f 60%,#0f0f11)">${C.photo?.url?bgImg(C.photo)+'<div class="bgl" style="background:rgba(0,0,0,.38)"></div>':''}</div>`;
+  const bg=`<div class="bgl" style="background:linear-gradient(175deg,#3c3f46,#1a1b1f 60%,#0f0f11)">${C.photo?.url?bgImg(C.photo,SA)+'<div class="bgl" style="background:rgba(0,0,0,.38)"></div>':''}</div>`;
   const ring=p?`box-shadow:0 0 0 ${p*7}px rgba(52,199,89,${(0.42-p*0.1).toFixed(2)})`:'';
   const body=`<div class="cl"><div class="cl-sub">${esc(C.sub)}</div><div class="cl-name">${esc(C.name)}</div></div>
   <div class="cl-bot"><div class="cl-row" style="margin-bottom:46px"><div class="cl-it"><div class="c s">${I.alarm('#fff',22)}</div>리마인더</div><div class="cl-it"><div class="c s">${I.msg('#fff',22)}</div>메시지</div></div>
@@ -766,11 +797,55 @@ const rng=(p,min,max,step,l,unit='')=>`<div class="rg"><span>${l}</span><input t
 const sws=(p,list)=>`<div class="sws">${list.map(([v,css,t])=>`<button type="button" class="sw ${g(p)==v?'on':''}" style="background:${css}" title="${t}" data-act="set" data-path="${p}" data-val="${v}" ${typeof v==='number'?'data-num':''}></button>`).join('')}</div>`;
 const randBtn=k=>`<button class="mini" data-act="rand" data-val="${k}">↻ 랜덤</button>`;
 const mv=(p,i,n)=>`<div class="ibs"><button class="ib" data-act="move" data-path="${p}" data-i="${i}" data-d="-1" ${i===0?'disabled style="opacity:.35"':''} title="위로">↑</button><button class="ib" data-act="move" data-path="${p}" data-i="${i}" data-d="1" ${i===n-1?'disabled style="opacity:.35"':''} title="아래로">↓</button><button class="ib x" data-act="del" data-path="${p}" data-i="${i}" title="삭제">✕</button></div>`;
+function navHTML(p,bare){
+  const im=g(p),ar=im.ar||1,z=Math.round(im.z||100);
+  const w=`min(100%,${Math.round(150*ar)}px)`;
+  return`<div class="nav ${bare?'bare':''}" data-nav="${p}">
+    <div class="nav-view" style="width:${w};aspect-ratio:${ar}"><div class="nav-img" style="background-image:url('${im.url}')"></div><div class="nav-rect"></div></div>
+    <div class="nav-bar"><button class="ib" data-act="zoom" data-path="${p}" data-d="-25" title="축소">−</button><input type="range" min="100" max="500" step="1" value="${z}" data-navz="${p}"><button class="ib" data-act="zoom" data-path="${p}" data-d="25" title="확대">+</button><span class="nav-z">${z}%</span><button class="mini" data-act="zoomFit" data-path="${p}">맞춤</button></div>
+    <div class="nav-tip">네모를 끌어서 위치 이동 · 휠/버튼으로 확대</div></div>`;
+}
+function clampImg(p){
+  const im=g(p);if(!im)return;
+  im.z=Math.min(500,Math.max(100,im.z||100));
+  const L=imgLayout(im,aspectOf(p,im));
+  const cx=Math.min(1-L.vw/2,Math.max(L.vw/2,(im.x??50)/100)),cy=Math.min(1-L.vh/2,Math.max(L.vh/2,(im.y??50)/100));
+  im.x=+(cx*100).toFixed(3);im.y=+(cy*100).toFixed(3);
+}
+function updNav(el){
+  const p=el.dataset.nav,im=g(p);if(!im)return;
+  const L=imgLayout(im,aspectOf(p,im)),r=el.querySelector('.nav-rect');
+  r.style.left=L.vx*100+'%';r.style.top=L.vy*100+'%';r.style.width=L.vw*100+'%';r.style.height=L.vh*100+'%';
+  const z=Math.round(im.z||100);el.querySelector('.nav-z').textContent=z+'%';el.querySelector('input[data-navz]').value=z;
+}
+function setZoom(p,z){const im=g(p);if(!im)return;im.z=z;clampImg(p);document.querySelectorAll(`[data-nav="${p}"]`).forEach(updNav);commit();}
+let navDrag=null;
+document.addEventListener('pointerdown',e=>{
+  const v=e.target.closest('.nav-view');if(!v)return;
+  const el=v.closest('.nav'),p=el.dataset.nav,im=g(p);if(!im)return;
+  const L=imgLayout(im,aspectOf(p,im)),b=v.getBoundingClientRect();
+  const px=(e.clientX-b.left)/b.width,py=(e.clientY-b.top)/b.height;
+  const inside=px>=L.vx&&px<=L.vx+L.vw&&py>=L.vy&&py<=L.vy+L.vh;
+  navDrag={el,p,b,ox:inside?px-(L.vx+L.vw/2):0,oy:inside?py-(L.vy+L.vh/2):0};
+  v.setPointerCapture(e.pointerId);e.preventDefault();navMove(e);
+});
+function navMove(e){
+  if(!navDrag)return;const{el,p,b,ox,oy}=navDrag,im=g(p);
+  im.x=((e.clientX-b.left)/b.width-ox)*100;im.y=((e.clientY-b.top)/b.height-oy)*100;
+  clampImg(p);updNav(el);schedule();
+}
+document.addEventListener('pointermove',navMove);
+document.addEventListener('pointerup',()=>{if(navDrag){navDrag=null;commit();}});
+document.addEventListener('wheel',e=>{
+  const v=e.target.closest('.nav-view');if(!v)return;e.preventDefault();
+  const p=v.closest('.nav').dataset.nav,im=g(p);if(!im)return;
+  setZoom(p,(im.z||100)*(e.deltaY<0?1.08:1/1.08));
+},{passive:false});
 function imgField(p,label,adj=true){
   const im=g(p), has=im&&im.url;
   return`<div class="imgf"><div class="imgf-top"><div class="th" style="${has?`background-image:url('${im.url}')`:''}">${has?'':'+'}</div><div class="imgf-tx"><b>${label}</b><span>${has?'적용됨 · 위치 조절 가능':'JPG · PNG · WEBP'}</span></div>
   <label class="btn sm ghost upl">${has?'변경':'업로드'}<input type="file" accept="image/*" data-img="${p}"></label>${has?`<button class="ib x" data-act="clearImg" data-path="${p}" title="삭제">✕</button>`:''}</div>
-  ${has&&adj?`<div class="imgf-adj">${rng(p+'.x',0,100,1,'가로','%')}${rng(p+'.y',0,100,1,'세로','%')}${rng(p+'.z',100,300,1,'확대','%')}</div>`:''}</div>`;
+  ${has&&adj?navHTML(p):''}</div>`;
 }
 const imgMini=p=>{const im=g(p);return im&&im.url
   ?`<div class="row"><div class="th" style="width:32px;height:32px;border-radius:8px;background-image:url('${im.url}')"></div><button class="mini" data-act="clearImg" data-path="${p}">사진 빼기</button></div>`
@@ -826,7 +901,7 @@ function E_gallery(){
   return card('갤러리',`<div class="g2">${fld('제목',txt('gallery.title','최근 항목'))}${fld('열 개수',seg('gallery.cols',[[3,'3'],[4,'4'],[5,'5']]))}</div>
     <label class="btn line upl">＋ 사진 여러 장 추가<input type="file" accept="image/*" multiple data-gallery></label>
     ${G.items.length?`<div class="gthumbs">${G.items.map((it,i)=>`<div class="gt ${i===ui.gsel?'on':''}" style="background-image:url('${it.img.url}')" data-act="gsel" data-i="${i}"><button class="x" data-act="del" data-path="gallery.items" data-i="${i}">✕</button></div>`).join('')}</div>`:''}
-    ${sel?`<div class="imgf-adj"><div class="row" style="justify-content:space-between"><b style="font-size:12.5px">${ui.gsel+1}번 사진 위치</b>${mv('gallery.items',ui.gsel,G.items.length)}</div>${rng(`gallery.items.${ui.gsel}.img.x`,0,100,1,'가로','%')}${rng(`gallery.items.${ui.gsel}.img.y`,0,100,1,'세로','%')}${rng(`gallery.items.${ui.gsel}.img.z`,100,300,1,'확대','%')}</div>`:G.items.length?'<div class="hint" style="margin-top:8px">사진을 누르면 위치·순서를 조절할 수 있어요.</div>':''}`);
+    ${sel?`<div class="imgf-adj"><div class="row" style="justify-content:space-between"><b style="font-size:12.5px">${ui.gsel+1}번 사진 위치</b>${mv('gallery.items',ui.gsel,G.items.length)}</div>${navHTML(`gallery.items.${ui.gsel}.img`,true)}</div>`:G.items.length?'<div class="hint" style="margin-top:8px">사진을 누르면 위치·순서를 조절할 수 있어요.</div>':''}`);
 }
 function E_device(){
   return card('기기',`${fld('모델',seg('device.model',[['island','다이나믹 아일랜드'],['notch','노치'],['punch','펀치홀']]))}
@@ -850,8 +925,8 @@ function E_export(){
       ?`<div class="fld"><span class="lb">순서 — 누른 순서대로 이어져요</span><div class="gseq">${SCREENS.map(([k,l])=>{const n=e.gifScreens.indexOf(k);return`<button type="button" class="${n>=0?'on':''}" data-act="gifToggle" data-val="${k}"><i>${n>=0?n+1:''}</i>${l}</button>`;}).join('')}</div></div>
         ${tog('exp.gifAnim','각 화면 애니메이션 포함')}<div class="sep"></div>`
       :`<div class="hint box">지금 화면 <b>(${SCREENS.find(x=>x[0]===S.screen)[1]})</b> → ${gifDesc}</div>`}
-    ${rng('exp.gifDelay',300,2000,50,'속도','ms')}
-    ${fld('크기',seg('exp.gifScale',[[1,'1x (가벼움)'],[1.5,'1.5x'],[2,'2x (선명)']]))}
+    ${fld('속도',seg('exp.gifSpeed',[[0.75,'느리게'],[1,'보통'],[1.5,'빠르게'],[2.5,'아주 빠르게']]))}
+    ${fld('화질',seg('exp.gifScale',[[1.5,'보통'],[2,'선명'],[3,'최고 (용량 큼)']]))}
     ${fld('배경',seg('exp.gifBg',[['#ffffff','흰색'],['#f3f3f5','회색'],['#000000','검정'],['transparent','투명']]))}
     ${tog('exp.typing','상대 메시지 전에 "입력 중…" 넣기')}<div class="sep"></div>
     <button class="btn full" data-act="gif">GIF 저장</button>`)
@@ -868,7 +943,7 @@ function renderEditor(){
       +({lock:E_lock,chat:E_chat,sms:E_sms,face:E_face,call:E_call,gallery:E_gallery})[S.screen]();
   }else if(ui.tab==='device')h=E_device();
   else h=E_export();
-  $('#pbody').innerHTML=h;pb.scrollTop=top;
+  $('#pbody').innerHTML=h;pb.scrollTop=top;document.querySelectorAll('.nav').forEach(updNav);
 }
 
 /* ═════════════ Events ═════════════ */
@@ -877,7 +952,8 @@ const FMT={
   bat:el=>{let v=el.value.replace(/\D/g,'').slice(0,3);if(+v>100)v='100';el.value=v;return v===''?0:+v;},
 };
 document.addEventListener('input',e=>{
-  const el=e.target,p=el.dataset.bind;if(!p)return;
+  const el=e.target;if(el.dataset.navz){setZoom(el.dataset.navz,+el.value);return;}
+  const p=el.dataset.bind;if(!p)return;
   let v=el.type==='checkbox'?el.checked:el.type==='range'?Number(el.value):el.value;
   if(el.dataset.fmt)v=FMT[el.dataset.fmt](el);
   sp(p,v);
@@ -907,6 +983,8 @@ const ACT={
   move:el=>{const a=g(el.dataset.path),i=+el.dataset.i,j=i+ +el.dataset.d;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];if(el.dataset.path==='gallery.items')ui.gsel=j;renderEditor();commit();},
   clearImg:el=>{sp(el.dataset.path,null);renderEditor();commit();},
   gifToggle:el=>{const a=S.exp.gifScreens,k=el.dataset.val,i=a.indexOf(k);if(i>=0)a.splice(i,1);else a.push(k);renderEditor();commit();},
+  zoom:el=>{const im=g(el.dataset.path);if(im)setZoom(el.dataset.path,(im.z||100)+ +el.dataset.d);},
+  zoomFit:el=>{const im=g(el.dataset.path);if(!im)return;im.x=50;im.y=50;setZoom(el.dataset.path,100);},
   gsel:el=>{ui.gsel=ui.gsel===+el.dataset.i?-1:+el.dataset.i;renderEditor();},
   rand:el=>{RAND[el.dataset.val]();renderEditor();commit();},
   png:()=>exportPNG(false),copy:()=>exportPNG(true),gif:()=>exportGIF(),
@@ -934,7 +1012,7 @@ document.addEventListener('change',async e=>{
   try{
     if(el.dataset.img!==undefined){sp(el.dataset.img,await loadImg(el.files[0]));}
     else if(el.dataset.gallery!==undefined){for(const f of el.files)S.gallery.items.push({id:uid(),img:await loadImg(f,900)});}
-    else if(el.dataset.load!==undefined){const t=await el.files[0].text();S=merge(defaults(),JSON.parse(t));ui.gsel=-1;toast('프로젝트를 불러왔어요');}
+    else if(el.dataset.load!==undefined){const t=await el.files[0].text();S=merge(defaults(),JSON.parse(t));ui.gsel=-1;if(!(S.exp.gifScale>=1.5))S.exp.gifScale=2;if(![0.75,1,1.5,2.5].includes(S.exp.gifSpeed))S.exp.gifSpeed=1.5;toast('프로젝트를 불러왔어요');}
     renderEditor();commit();
   }catch(err){console.error(err);toast('파일을 읽지 못했어요');}
 });
@@ -974,8 +1052,8 @@ async function exportPNG(copy){
 
 /* ═════════════ GIF frames ═════════════ */
 function buildFrames(s){
-  const D=s.exp.gifDelay,hold=Math.max(1800,D*2.2),F=[];
-  const push=(mod,delay)=>{const c=structuredClone(s);c.chat.typing=false;mod(c);F.push({s:c,delay});};
+  const sp=s.exp.gifSpeed||1,D=700/sp,hold=1600/sp,F=[];
+  const push=(mod,delay)=>{const c=structuredClone(s);c.chat.typing=false;mod(c);F.push({s:c,delay:Math.max(30,Math.round(delay))});};
   switch(s.screen){
     case'lock':{const n=s.lock.notis.length;for(let k=0;k<=n;k++)push(c=>{c.lock.notis=c.lock.notis.slice(0,k);},k===n?hold:(k===0?D*1.2:D));break;}
     case'chat':case'sms':{
@@ -984,17 +1062,17 @@ function buildFrames(s){
       push(c=>take(c,0),D);
       const ms=s.chat.messages.filter(visibleMsg);
       for(let k=1;k<=n;k++){
-        if(s.exp.typing&&ms[k-1].side==='left'&&(k===1||ms[k-2].side!=='left'))push(c=>{take(c,k-1);c._typing=true;},Math.max(700,D));
+        if(s.exp.typing&&ms[k-1].side==='left'&&(k===1||ms[k-2].side!=='left'))push(c=>{take(c,k-1);c._typing=true;},D*.9);
         push(c=>take(c,k),k===n?hold:D);
       }break;}
     case'face':{
       const m=s.face.status.match(/(\d{1,2}):(\d{2})(?!.*\d{1,2}:\d{2})/);
-      if(!m){push(()=>{},1000);break;}
+      if(!m){push(()=>{},hold);break;}
       let sec=+m[1]*60+ +m[2];
-      for(let i=0;i<10;i++){const t=sec+i,str=`${pad(Math.floor(t/60)%100)}:${pad(t%60)}`;push(c=>{c.face.status=s.face.status.slice(0,m.index)+str+s.face.status.slice(m.index+m[0].length);},1000);}
+      for(let i=0;i<10;i++){const t=sec+i,str=`${pad(Math.floor(t/60)%100)}:${pad(t%60)}`;push(c=>{c.face.status=s.face.status.slice(0,m.index)+str+s.face.status.slice(m.index+m[0].length);},1000/sp);}
       break;}
-    case'call':{for(const p of [0,1,2,3,0,1,2,3])push(c=>{c._pulse=p;},p===0?420:170);break;}
-    case'gallery':{const n=Math.min(s.gallery.items.length,40);for(let k=0;k<=n;k++)push(c=>{c.gallery.items=c.gallery.items.slice(0,k);},k===n?hold:Math.min(D,500));break;}
+    case'call':{for(const p of [0,1,2,3,0,1,2,3])push(c=>{c._pulse=p;},(p===0?420:170)/sp);break;}
+    case'gallery':{const n=Math.min(s.gallery.items.length,40);for(let k=0;k<=n;k++)push(c=>{c.gallery.items=c.gallery.items.slice(0,k);},k===n?hold:D*.6);break;}
   }
   return F;
 }
@@ -1002,7 +1080,7 @@ function buildFrames(s){
 /* ═════════════ GIF encoder (median-cut palette + LZW + frame diff) ═════════════ */
 function buildPalette(list,max){
   let total=0;for(const d of list)total+=d.length>>2;
-  const step=Math.max(1,Math.floor(total/90000));
+  const step=Math.max(1,Math.floor(total/220000));
   const sample=[];
   for(const d of list){for(let i=0,n=0;i<d.length;i+=4,n++){if(n%step)continue;if(d[i+3]<128)continue;sample.push((d[i]<<16)|(d[i+1]<<8)|d[i+2]);}}
   if(!sample.length)sample.push(0);
@@ -1041,8 +1119,8 @@ function lzw(ix,min){
 }
 function subBlocks(d){const n=d.length,o=new Uint8Array(n+Math.ceil(n/255)+1);let j=0;for(let i=0;i<n;i+=255){const l=Math.min(255,n-i);o[j++]=l;o.set(d.subarray(i,i+l),j);j+=l;}o[j++]=0;return o.subarray(0,j);}
 class GifEnc{
-  constructor(w,h,pal){this.w=w;this.h=h;this.pal=pal;this.lut=new Int16Array(1<<18).fill(-1);this.prev=null;this.frames=[];}
-  near(r,g,b){const k=((r>>2)<<12)|((g>>2)<<6)|(b>>2);let v=this.lut[k];if(v>=0)return v;let bd=1e12;const P=this.pal;
+  constructor(w,h,pal){this.w=w;this.h=h;this.pal=pal;this.lut=new Int16Array(1<<21).fill(-1);this.prev=null;this.frames=[];}
+  near(r,g,b){const k=((r>>1)<<14)|((g>>1)<<7)|(b>>1);let v=this.lut[k];if(v>=0)return v;let bd=1e12;const P=this.pal;
     for(let i=0;i<P.length;i++){const q=P[i],dr=q[0]-r,dg=q[1]-g,db=q[2]-b,d=dr*dr*3+dg*dg*4+db*db*2;if(d<bd){bd=d;v=i;}}this.lut[k]=v;return v;}
   add(data,delay){
     const{w,h}=this,n=w*h,cur=new Uint8Array(n);
@@ -1072,7 +1150,7 @@ function gifPlan(){
   const e=S.exp;
   if(e.gifMode!=='multi'){const f=buildFrames(S);return{frames:f,keys:[0,f.length-1],name:S.screen};}
   const list=e.gifScreens.length?e.gifScreens:[S.screen];
-  const frames=[],keys=[],hold=Math.max(1400,e.gifDelay*1.8);
+  const frames=[],keys=[],hold=Math.round(1400/(e.gifSpeed||1));
   for(const k of list){
     const c=structuredClone(S);c.screen=k;
     const seg=e.gifAnim?buildFrames(c):[{s:c,delay:hold}];
