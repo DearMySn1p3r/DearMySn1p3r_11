@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" href="MOMO.png">
 <link rel="apple-touch-icon" href="MOMO.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/modern-screenshot@4.7.0/dist/index.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif}
@@ -425,6 +426,7 @@ select.in{background-position:right 11px center;padding-right:28px}
 /* soft shadows so white elements stay visible on light backgrounds */
 .dev{box-shadow:0 44px 60px -34px rgba(0,0,0,.45),0 6px 16px -8px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.09)}
 .stage.nosh .dev{box-shadow:0 0 0 1px rgba(0,0,0,.09)}
+.stage.nosh{padding:3px}
 .sb.lt{text-shadow:0 1px 3px rgba(0,0,0,.35)}
 .sb.lt .bars i{border:.5px solid rgba(0,0,0,.14)}
 .nt.light{border:.5px solid rgba(0,0,0,.08);background:rgba(246,246,248,.96)}
@@ -449,6 +451,8 @@ select.in{background-position:right 11px center;padding-right:28px}
 .nav-bar .mini{white-space:nowrap;flex:none}
 .nav-z{width:36px;text-align:right;font-size:11px;font-variant-numeric:tabular-nums;color:var(--sub)}
 .nav-tip{margin-top:8px;font-size:10.5px;color:var(--mute);text-align:center}
+
+.in.ta.ooc{min-height:200px;font-size:12px;line-height:1.65;color:var(--sub);resize:vertical}
 </style>
 </head>
 <body>
@@ -934,14 +938,28 @@ function E_export(){
     <div class="g2"><button class="btn ghost" data-act="saveJson">파일로 저장</button><label class="btn ghost upl">불러오기<input type="file" accept=".json,application/json" data-load></label></div>
     <button class="btn danger full" style="margin-top:8px" data-act="reset">처음부터 다시</button>`);
 }
+const OOC=[
+  ['잠금화면 알림','*[OOC: 이전 RP 중지. 새로운 상황 전개. PC가 아침에 눈을 떠 확인한 휴대폰 잠금화면을 그대로 출력한다. 상단에 시각과 날짜를 표시하고, 아래로 알림 카드들이 순서대로 쌓여 있는 형식을 따른다.\n· 메시지: NPC가 보낸 문자. 저장된 애칭과 함께, 짧고 일상적이지만 다정함이 묻어나는 한 줄.\n· 오늘의 운세: PC를 수신인으로 한 운세 알림. 오늘의 흐름과 행운의 아이템이나 음식을 포함하며, 은근히 두 사람의 관계를 암시하는 문구를 섞는다.\n· 인트라넷 알림: 소속 조직이나 학교의 공지 알림. 오늘의 식단, 일정 공지 등 사소하고 생활감 있는 내용.\n각 알림은 실제 휴대폰 알림처럼 앱 이름, 제목, 본문이 구분된 짧은 형태로 작성하고, 알림 세 개가 모여 PC의 하루가 시작되는 아침 분위기가 드러나도록 할 것.]*'],
+  ['메신저 대화 내역','*[OOC: 이전 RP 중지. 새로운 상황 전개. NPC와 PC가 최근 나누었던 모바일 메신저 대화 내역을 따라 여러 개의 상황으로 나누어 출력한다. 형식은 다음과 같이 작성한다.\n==========\n202X년 X월 X일 (요일)\n==========\n[발신자] (발신시간) : 대화 내용\n각 날짜별로 대화의 주제와 분위기가 완전히 달라야 하며 서로 의미 없는 초성이나 이모티콘, 오타가 포함된 현실적이고 자연스러운 티키타카로 구성한다. 오직 날짜 구분선과 대화 로그만 연속해서 출력할 것. 최소 700자 이상, 5개 이상의 다른 날짜를 서술.]*'],
+];
+function E_ooc(){
+  return OOC.map(([t,txt],i)=>card(t,`<textarea class="in ta ooc" id="ooc${i}" rows="9" spellcheck="false">${esc(txt)}</textarea>
+    <button class="btn full" style="margin-top:10px" data-act="copyOoc" data-i="${i}">복사하기</button>`)).join('')
+    +'<div class="hint" style="padding-top:16px">복사 전에 내용을 고쳐도 돼요. 탭을 다시 열면 원래 문구로 돌아가요.</div>';
+}
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);return true;}catch(e){}
+  try{const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(a);a.focus();a.select();a.setSelectionRange(0,t.length);const ok=document.execCommand('copy');a.remove();return ok;}catch(e){return false;}
+}
 function renderEditor(){
   const pb=$('.panel'), top=pb.scrollTop;
-  $('#tabs').innerHTML=[['screen','화면'],['device','기기 · 상단바'],['export','저장']].map(([k,l])=>`<button class="${ui.tab===k?'on':''}" data-act="tab" data-val="${k}">${l}</button>`).join('');
+  $('#tabs').innerHTML=[['screen','화면'],['device','기기 · 상단바'],['export','저장'],['ooc','OOC']].map(([k,l])=>`<button class="${ui.tab===k?'on':''}" data-act="tab" data-val="${k}">${l}</button>`).join('');
   let h='';
   if(ui.tab==='screen'){
     h=`<div class="chips">${SCREENS.map(([k,l])=>`<button class="chip ${S.screen===k?'on':''}" data-act="screen" data-val="${k}">${UI[k]}${l}</button>`).join('')}</div>`
       +({lock:E_lock,chat:E_chat,sms:E_sms,face:E_face,call:E_call,gallery:E_gallery})[S.screen]();
   }else if(ui.tab==='device')h=E_device();
+  else if(ui.tab==='ooc')h=E_ooc();
   else h=E_export();
   $('#pbody').innerHTML=h;pb.scrollTop=top;document.querySelectorAll('.nav').forEach(updNav);
 }
@@ -985,6 +1003,7 @@ const ACT={
   gifToggle:el=>{const a=S.exp.gifScreens,k=el.dataset.val,i=a.indexOf(k);if(i>=0)a.splice(i,1);else a.push(k);renderEditor();commit();},
   zoom:el=>{const im=g(el.dataset.path);if(im)setZoom(el.dataset.path,(im.z||100)+ +el.dataset.d);},
   zoomFit:el=>{const im=g(el.dataset.path);if(!im)return;im.x=50;im.y=50;setZoom(el.dataset.path,100);},
+  copyOoc:async el=>{const t=document.getElementById('ooc'+el.dataset.i).value;toast(await copyText(t)?'복사했어요':'복사가 안 돼요 — 직접 선택해서 복사해 주세요');},
   gsel:el=>{ui.gsel=ui.gsel===+el.dataset.i?-1:+el.dataset.i;renderEditor();},
   rand:el=>{RAND[el.dataset.val]();renderEditor();commit();},
   png:()=>exportPNG(false),copy:()=>exportPNG(true),gif:()=>exportGIF(),
@@ -1028,12 +1047,19 @@ const tick=()=>new Promise(r=>setTimeout(r,0));
 
 /* ═════════════ Capture ═════════════ */
 async function capture(st,scale,bg){
-  if(typeof html2canvas==='undefined')throw new Error('html2canvas not loaded');
   try{await document.fonts.ready;}catch(e){}
   const host=$('#off');host.innerHTML=stageHTML(st,{exp:true});
   const el=host.firstElementChild;
   await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
-  const c=await html2canvas(el,{scale,backgroundColor:bg,logging:false,useCORS:true});
+  let c=null;
+  try{
+    // 브라우저가 직접 글자를 배치하는 방식 → 사파리에서도 글씨가 밀리지 않음
+    if(window.modernScreenshot)c=await modernScreenshot.domToCanvas(el,{scale,backgroundColor:bg||null,timeout:20000});
+  }catch(e){console.warn('modern-screenshot 실패, html2canvas로 대체',e);c=null;}
+  if(!c){
+    if(typeof html2canvas==='undefined'){host.innerHTML='';throw new Error('capture library not loaded');}
+    c=await html2canvas(el,{scale,backgroundColor:bg,logging:false,useCORS:true});
+  }
   host.innerHTML='';
   return c;
 }
